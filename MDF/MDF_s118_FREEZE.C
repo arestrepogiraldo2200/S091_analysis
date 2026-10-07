@@ -15,7 +15,7 @@ int tpat;
 TString MDF_PoQ_file = "./MDF_params.txt";
 // TString MDF_PoQ_file = "./MDF_PoQ_1456A_20240221.txt";
 
-const TString isotopeTag = "All252";
+const TString isotopeTag = "AllC_FREEZE";
 const TString outputRootDir = Form("%s_mdf", isotopeTag.Data());
 const TString outputPngDir = Form("%s_mdf", isotopeTag.Data());
 const TString detectorLabFile = Form("%s_lab.root", isotopeTag.Data());
@@ -177,7 +177,7 @@ double averageMWPC1(std::string filename){
     return average;
 }
 
-void MDF_s118_CLEAN(){
+void MDF_s118_FREEZE(){
 
     // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
     MDF_PoQ = new R3BMDFWrapper(MDF_PoQ_file);

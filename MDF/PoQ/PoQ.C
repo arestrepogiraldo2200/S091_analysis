@@ -198,7 +198,7 @@ void MergeHistogramFromFiles(
                 const Double_t xValue = verticalMarkers->at(i) * xScale;
                 TLine* line = new TLine(xValue, 0.0, xValue, markerYMax);
                 line->SetLineColorAlpha(colors[i % nColors], markerLineAlpha);
-                line->SetLineWidth(1);
+                line->SetLineWidth(3);
                 line->SetLineStyle(7);
                 line->Draw("same");
                 markerLines.push_back(line);

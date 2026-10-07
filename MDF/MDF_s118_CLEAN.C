@@ -19,7 +19,7 @@ int tpat;
 TString MDF_PoQ_file = "./MDF_params.txt";
 // TString MDF_PoQ_file = "./MDF_PoQ_1456A_20240221.txt";
 
-const TString isotopeTag = "280C";
+const TString isotopeTag = "14C";
 const TString outputRootDir = Form("%s_mdf", isotopeTag.Data());
 const TString outputPngDir = Form("%s_mdf", isotopeTag.Data());
 const TString detectorLabFile = Form("%s_lab.root", isotopeTag.Data());
@@ -466,11 +466,11 @@ void MDF_s118_CLEAN(){
     // sprintf(fname1,"./main0321_0001_unpacked_MDF_v3.root");        // 11C
     // sprintf(fname1,"./main0327_0001_unpacked_MDF_v3.root");        // 12C
     // sprintf(fname1,"./main0324_0001_unpacked_MDF_v3.root");        // 13C
-    // sprintf(fname1,"./main0325_0001_unpacked_MDF_v3.root");        // 14C
+    sprintf(fname1,"./main0325_0001_unpacked_MDF_v3.root");        // 14C
 
     // sprintf(fname1,"./merged_partial.root"); 
     // sprintf(fname1,"./main0252_0001_unpacked_MDF_2.root");
-    sprintf(fname1,"./main0280_0001_unpacked_los.root");
+    // sprintf(fname1,"./main0280_0001_unpacked_los.root");
 
     // Cut in FRS incomming beam
     FRS_CUT = false;

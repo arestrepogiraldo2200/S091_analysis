@@ -7,7 +7,7 @@
 #include <cmath>
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// Definitions of strings and histograms 
+// Definitions of strings and histograms
 char fname1[200], fname2[200], fname3[200], fname4[200], fname5[200];
 int tpat;
 // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
@@ -19,11 +19,22 @@ int tpat;
 TString MDF_PoQ_file = "./MDF_params.txt";
 // TString MDF_PoQ_file = "./MDF_PoQ_1456A_20240221.txt";
 
-const TString isotopeTag = "C280_opt";
+const TString isotopeTag = "AllC_opt";
 const TString outputRootDir = Form("%s_mdf", isotopeTag.Data());
 const TString outputPngDir = Form("%s_mdf", isotopeTag.Data());
 const TString detectorLabFile = Form("%s_lab.root", isotopeTag.Data());
 const TString outputRootFile = Form("%s/%s_mdf.root", outputRootDir.Data(), isotopeTag.Data());
+
+// Constant beta. Calculated with lise++ from the Brho of FRS
+// const double beta_b  = 0.6832911;   // 10C
+// const double beta_b  = 0.7212162;   // 11C
+const double beta_b  = 0.7409629;   // 12C
+// const double beta_b  = 0.7813805;   // 13C
+// const double beta_b  = 0.8052148;   // 14C
+
+const double gamma_b = 1.0/std::sqrt(1.0-beta_b*beta_b);
+const double factor_b  = 3.33555703802535; 
+const double mu = 0.93149410372;
 
 Double_t mdf_data[7]={0};
 // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
@@ -62,24 +73,21 @@ TH2D* h_FI33_FI31_combined_FI32_X;
 
 // P/Q histogram
 TH1D* h_PoQ;
-
-// Incidence angle histogram
-TH1D* h_incidence_angle;
+// A/Q histogram
+TH1D* h_AoQ;
 
 // Correlated area
 TH2D* h_FIB31_FIB33_combined_FIB32_area;
 
 // Charge and momentum space
 TH2D* h_PoQvsQ;
+TH2D* h_AoQvsQ;
 TH2D* h_AoZvsZ_FRS;
 TH2D* h_AoZvsZ_FRS_cut;
 
 // Correlations between detectors before and after
 TH2D* h_MWPC1_FI31_FI33_X_single_corr;
 TH2D* h_MWPC1_FI32_X_single_corr;
-
-// Correlations between incidence angle and FIB31&33 positions
-TH2D* h_ANGLE_FIB33_FIB31;
 
 vector<R3BLosHitData*> LOS_hit;
 vector<R3BMwpcHitData*> MWPC1_hit;
@@ -426,10 +434,6 @@ void MDF_s118_OPTIMIZED(){
     h_MWPC1_FI31_FI33_X_single_corr->GetXaxis()->SetTitle("MWPC1 X-position [mm]" );
     h_MWPC1_FI31_FI33_X_single_corr->GetYaxis()->SetTitle("FIB31&FIB33 X-position [cm]");
 
-    h_ANGLE_FIB33_FIB31 = new TH2D("Incidence angle and position in fibers","Incidence angle and position in fibers", 300, -52.8, 52.8, 200, -0.1, 0.1);
-    h_ANGLE_FIB33_FIB31->GetXaxis()->SetTitle("Fibers X-position [cm]" );
-    h_ANGLE_FIB33_FIB31->GetYaxis()->SetTitle("Incidence angle [rad]");
-
     // Momentum P/Q
     h_PoQ = new TH1D("PoQ from MDF","PoQ from MDF", 5000, 0, 4);
     h_PoQ->GetXaxis()->SetTitle("PoQ [GeV/c]");
@@ -438,6 +442,14 @@ void MDF_s118_OPTIMIZED(){
     h_PoQvsQ->GetXaxis()->SetTitle("PoQ [GeV/c]");
     h_PoQvsQ->GetYaxis()->SetTitle("Q");
 
+    // Mass A/Q
+    h_AoQ = new TH1D("AoQ from MDF","AoQ from MDF", 2000, 0, 4);
+    h_AoQ->GetXaxis()->SetTitle("AoQ");
+
+    h_AoQvsQ = new TH2D("A/Q vs Q from MDF","A/Q vs Q from MDF", 2000, 0, 4, 3000, 0, 8);
+    h_AoQvsQ->GetXaxis()->SetTitle("AoQ");
+    h_AoQvsQ->GetYaxis()->SetTitle("Q");
+
     h_AoZvsZ_FRS = new TH2D("A/Z vs Z incomming","A/Z vs Z incomming", 5000, 0, 4, 3000, 0, 8);
     h_AoZvsZ_FRS->GetXaxis()->SetTitle("AoZ");
     h_AoZvsZ_FRS->GetYaxis()->SetTitle("Z");
@@ -445,10 +457,6 @@ void MDF_s118_OPTIMIZED(){
     h_AoZvsZ_FRS_cut = new TH2D("A/Z vs Z incomming cut","A/Z vs Z incomming cut", 5000, 0, 4, 3000, 0, 8);
     h_AoZvsZ_FRS_cut->GetXaxis()->SetTitle("AoZ");
     h_AoZvsZ_FRS_cut->GetYaxis()->SetTitle("Z");
-
-    // Incidence angle 
-    h_incidence_angle = new TH1D("Incidence angle between plane of FIB32 and FIB31-FIB33","Incidence angle between plane of FIB32 and FIB31-FIB33", 200, -0.1, 0.1);
-    h_incidence_angle->GetXaxis()->SetTitle("Theta [rad]");
 
     // TOFD recalibration
     LoadCalibrationMatrix("./recalib_tofd_c0.txt", recalib_tofd_c0);
@@ -460,7 +468,7 @@ void MDF_s118_OPTIMIZED(){
 
     TChain* chain = new TChain("evt"); 
     //sprintf(fname1,"./merged_MDF_runs.root"); 
-    // sprintf(fname1,"./merged_MDF_runs_v3.root");
+    sprintf(fname1,"./merged_MDF_runs_v3.root");
 
     // sprintf(fname1,"./main0326_0001_unpacked_MDF_v3.root");        // 10C
     // sprintf(fname1,"./main0321_0001_unpacked_MDF_v3.root");        // 11C
@@ -470,7 +478,7 @@ void MDF_s118_OPTIMIZED(){
 
     // sprintf(fname1,"./merged_partial.root"); 
     // sprintf(fname1,"./main0252_0001_unpacked_MDF_2.root");
-    sprintf(fname1,"./main0280_0001_unpacked_los.root");
+    // sprintf(fname1,"./main0280_0001_unpacked_los.root");
 
     // Cut in FRS incomming beam
     FRS_CUT = false;
@@ -898,15 +906,9 @@ void MDF_s118_OPTIMIZED(){
                         double X_33_cframe = FI33_corr_hit[0].GetX()+FIB33frame_to_FIB32frame;
                         double X_32_cframe = (FI32_corr_hit[mult-1].GetX());
 
-                        // double FIB32_FIB33_distance = 100;
-                        // double incidence_angle = TMath::ATan( (X_3133_cframe - X_32_cframe)/(FIB32_FIB33_distance));                        
-                        // h_incidence_angle->Fill(incidence_angle);
-
                         Candidate.fi32_dhit.SetXYZ((FI32_corr_hit[mult-1].GetX()), 0., 0.);                               // -1*FI32_corr_hit[mult-1].GetX() ?? FI32_corr_hit[mult-1].GetY()
                         Candidate.fi33_dhit.SetXYZ( FI33_corr_hit[0].GetX() + FIB33frame_to_FIB32frame, 0., 0.);       // -1*FI33_corr_hit[0].GetX()+26.4-5  ??  FI33_corr_hit[0].GetY()        
                         Candidate.fi31_dhit.SetXYZ(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());                                                        // -1*FI32_corr_hit[mult-1].GetX() ?? FI32_corr_hit[mult-1].GetY()
-
-                        // h_ANGLE_FIB33_FIB31->Fill( FI33_corr_hit[0].GetX() + FIB33frame_to_FIB32frame, incidence_angle);
                     }
 
                     if (FI31_corr_hit.size()>0 && FI33_corr_hit.size()==0){
@@ -915,17 +917,9 @@ void MDF_s118_OPTIMIZED(){
                         double X_31_cframe = FI31_corr_hit[0].GetX() + FIB31frame_to_FIB32frame;
                         double X_32_cframe = (FI32_corr_hit[mult-1].GetX());
                         
-                        // double FIB32_FIB31_distance = 100+17.5;
-                        // double incidence_angle = TMath::ATan( (X_3133_cframe-X_32_cframe)/(FIB32_FIB31_distance));
-                        // h_incidence_angle->Fill(incidence_angle);
-                        // double correction_projection = 17.5*TMath::Tan(incidence_angle);
-                        // double parallel_translation  = MWPC_avrg/10.0*(TMath::Cos(compl_Angle) + TMath::Sin(compl_Angle)*TMath::Tan(incidence_angle)); 
-
                         Candidate.fi32_dhit.SetXYZ((FI32_corr_hit[mult-1].GetX()), 0., 0.);   
                         Candidate.fi33_dhit.SetXYZ(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());                                                        // -1*FI32_corr_hit[mult-1].GetX() ?? FI32_corr_hit[mult-1].GetY()
                         Candidate.fi31_dhit.SetXYZ( FI31_corr_hit[0].GetX() + FIB31frame_to_FIB32frame, 0., 0.);           // -1*FI31_corr_hit[0].GetX()-26.4+5  ?? FI31_corr_hit[0].GetY()
-
-                        // h_ANGLE_FIB33_FIB31->Fill( FI31_corr_hit[0].GetX() + FIB31frame_to_FIB32frame - parallel_translation - correction_projection, incidence_angle);  
                     }
 
                     Candidate.tofd_dhit.SetXYZ(0. , 0. , 0.);    // Ignore tofd for now
@@ -981,10 +975,14 @@ void MDF_s118_OPTIMIZED(){
 
                         detectorTree->Fill();
 
-                        // cout << t.PoQ_mdf << endl;
-
                         h_PoQ->Fill(t.PoQ_mdf);
                         h_PoQvsQ->Fill(t.PoQ_mdf, averageEloss);
+
+                        // Calculation of A/Q using a constant beta
+                        double AoQ_cons = t.PoQ_mdf*(1)/(gamma_b*beta_b*mu);
+                        h_AoQ->Fill(AoQ_cons);
+                        h_AoQvsQ->Fill(AoQ_cons, averageEloss);
+
                     }    
                 }               
             }
@@ -1049,6 +1047,10 @@ void MDF_s118_OPTIMIZED(){
     c_PoQ->cd(1);
     h_PoQ->Draw("hist");
 
+    TCanvas* c_AoQ  = new TCanvas();
+    c_AoQ->cd(1);
+    h_AoQ->Draw("hist");
+
     TCanvas* c_LOS_X  = new TCanvas();
     c_LOS_X->cd(1);
     h_LOS_X->Draw("hist");
@@ -1072,10 +1074,6 @@ void MDF_s118_OPTIMIZED(){
     TCanvas* c_FICOMB_X  = new TCanvas();
     c_FICOMB_X->cd(1);
     h_FICOMB_X->Draw("hist");
-
-    TCanvas* c_incidence_angle  = new TCanvas();
-    c_incidence_angle->cd(1);
-    h_incidence_angle->Draw("hist");
 
     ///////////////////////////////////////////////////////////////////
 
@@ -1124,10 +1122,6 @@ void MDF_s118_OPTIMIZED(){
     c_MWPC1_FI31_FI33_X_single_corr->cd(1);
     h_MWPC1_FI31_FI33_X_single_corr->Draw("colz");
 
-    TCanvas* c_ANGLE_FIB33_FIB31 = new TCanvas();
-    c_ANGLE_FIB33_FIB31->cd(1);
-    h_ANGLE_FIB33_FIB31->Draw("colz");
-
     TCanvas* c_area = new TCanvas();
     c_area->cd(1);
     h_area->Draw("hist");
@@ -1141,6 +1135,10 @@ void MDF_s118_OPTIMIZED(){
     TCanvas* C_PoQvsQ = new TCanvas();
     C_PoQvsQ->cd(1);
     h_PoQvsQ->Draw("colz");
+
+    TCanvas* C_AoQvsQ = new TCanvas();
+    C_AoQvsQ->cd(1);
+    h_AoQvsQ->Draw("colz");
 
     TCanvas* c_AoZvsZ_FRS = new TCanvas();
     c_AoZvsZ_FRS->cd(1);
@@ -1196,13 +1194,13 @@ void MDF_s118_OPTIMIZED(){
     h_FI33_FI31_combined_FI32_X->Write();
     h_FIB31_FIB33_combined_FIB32_area->Write();
     h_MWPC1_FI31_FI33_X_single_corr->Write();
-    c_ANGLE_FIB33_FIB31->Write();
     h_MWPC1_FI32_X_single_corr->Write();
     h_PoQ->Write();
     h_PoQvsQ->Write();
+    h_AoQ->Write();
+    h_AoQvsQ->Write();
     h_AoZvsZ_FRS->Write();
     h_AoZvsZ_FRS_cut->Write();
-    h_incidence_angle->Write();
 
     rootFile->Close();
 

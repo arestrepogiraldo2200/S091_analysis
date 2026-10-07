@@ -15,11 +15,11 @@ void minimizePars() {
     MDF_PoQ = new R3BMDFWrapper("./MDF_params.txt");
 
     const UInt_t num_pars = 14;
-    const double target_delta = 0.5;
+    const double target_delta = 0.001;
 
     // Limits for the parameters       MWPC                 FIB32                         FIB33                       FIB31
-    double par_min[num_pars]   = {  -5,   -5,      -5,    -5,  -0.5,  -0.5,       -5,    -5,  -0.5,  -0.5,      -5,    -5,  -0.5,   -0.5};
-    double par_max[num_pars]   = {   5,    5,       5,     5,   0.5,   0.5,        5,     5,   0.5,   0.5,       5,     5,   0.5,    0.5};    
+    double par_min[num_pars]   = {  -5,   -5,      -5,    -5,  -0.2,  -0.2,       -5,    -5,  -0.2,  -0.2,      -5,    -5,  -0.2,   -0.2};
+    double par_max[num_pars]   = {   5,    5,       5,     5,   0.2,   0.2,        5,     5,   0.2,   0.2,       5,     5,   0.2,    0.2};    
     double step_size[num_pars] = {0.05, 0.05,    0.05,  0.05,  0.01,  0.01,     0.05,  0.05,  0.01,  0.01,    0.05,  0.05,  0.01,   0.01};
 
     // Histogram of parameters is created
@@ -29,7 +29,7 @@ void minimizePars() {
     }
 
     int num = 0;
-    while(num<20){
+    while(num<100){
 
         // Initializes randomness
         std::srand(std::time(nullptr));
@@ -210,7 +210,6 @@ void minimizePars() {
 
                         PoQ =  CalculatePoQ(mwpc1_lab_opt, fi31_lab_opt, fi32_lab_opt, Actual_Current, Reference_Current, MDF_PoQ);
                         cout << "WEIRD VALUE: " << CalculatePoQ(mwpc1_lab_opt, fi31_lab_opt, fi32_lab_opt, Actual_Current, Reference_Current, MDF_PoQ) << endl; 
-
                     }
 
                     std::cout << "\nFinal PoQ values with optimized parameters:\n";
@@ -222,7 +221,6 @@ void minimizePars() {
                     std::cout << "double par" << (i+1) << " = " << result[i] << ";" << "\n";
                 }
                 std::cout << "Best delta: " << minimizer->MinValue() << std::endl;
-                
             }
         }
     }
