@@ -18,8 +18,8 @@ void minimizePars() {
     const double target_delta = 0.001;
 
     // Limits for the parameters       MWPC                 FIB32                         FIB33                       FIB31
-    double par_min[num_pars]   = {  -5,   -5,      -5,    -5,  -0.2,  -0.2,       -5,    -5,  -0.2,  -0.2,      -5,    -5,  -0.2,   -0.2};
-    double par_max[num_pars]   = {   5,    5,       5,     5,   0.2,   0.2,        5,     5,   0.2,   0.2,       5,     5,   0.2,    0.2};    
+    double par_min[num_pars]   = {  -5,   -5,      -10,    -10,  -0.2,  -0.2,       -10,    -10,  -0.2,  -0.2,     -10,  -10,  -0.2,   -0.2};
+    double par_max[num_pars]   = {   5,    5,       10,     10,   0.2,   0.2,        10,     10,   0.2,   0.2,      10,   10,   0.2,    0.2};    
     double step_size[num_pars] = {0.05, 0.05,    0.05,  0.05,  0.01,  0.01,     0.05,  0.05,  0.01,  0.01,    0.05,  0.05,  0.01,   0.01};
 
     // Histogram of parameters is created
@@ -120,7 +120,6 @@ void minimizePars() {
                 double par13 = result[12];    // fib31 y'
                 double par14 = result[13];    // fib31 z'
 
-
                 for (int hit=0; hit<=4; hit++){
 
                     double PoQ=0;
@@ -198,7 +197,7 @@ void minimizePars() {
                         TransformPoint( fi33_lab_opt,   fi33_angles_opt + fi33_ang_offset_opt,   fi33_position_opt + fi33_pos_offset_opt);
 
                         PoQ =  CalculatePoQ(mwpc1_lab_opt, fi33_lab_opt, fi32_lab_opt, Actual_Current, Reference_Current, MDF_PoQ);
-                        cout << "WEIRD VALUE: " << CalculatePoQ(mwpc1_lab_opt, fi31_lab_opt, fi32_lab_opt, Actual_Current, Reference_Current, MDF_PoQ) << endl; 
+                        cout << "WEIRD VALUE: " << CalculatePoQ(mwpc1_lab_opt, fi33_lab_opt, fi32_lab_opt, Actual_Current, Reference_Current, MDF_PoQ) << endl; 
                     }
 
                     if (hit_31 == true && hit_33 == false){

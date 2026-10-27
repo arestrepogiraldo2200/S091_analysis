@@ -20,25 +20,21 @@ int main(Int_t argc, Char_t* argv[])
             if (strncmp(argv[i],"--pca",5) == 0)
             {
                 is_PCA = kTRUE;
-                //NeedHelp = kFALSE;
             }
         }
     }
-    //if (NeedHelp)
-    //{
-    //    cout << "\nUse the following flags: ";
-    //    cout << "\n--pca  :  (optional) to use PCA variables. Default tracking is without PCA \n" << endl;
-    //    return 0;
-    //}
     
+    // Color palette
     gRandom = new TRandom3();
     gRandom->SetSeed(0);
     gROOT->Macro("~/rootlogon.C");
     gStyle->SetPalette(kRainBow);
 
+    // GLAD mapping
     // R3BGladFieldMap* magField = new R3BGladFieldMap("R3BGladMap","A");
     R3BGladFieldMap* magField = new R3BGladFieldMap("R3BGladMap_Bxyz_X-3to3_Y-1to1_Z-4to13_step10mm","R");
 
+    // Reading of the magnetic field
     magField->SetPosition(0.7871, 1.75-1.526, Target_to_GLAD_flange + 54.05 - 0.55580);//x,y,z in cm 
     magField->SetXAngle(-0.113); //deg
     magField->SetYAngle(-14.08); //deg
@@ -49,10 +45,10 @@ int main(Int_t argc, Char_t* argv[])
     cout << "\n-- Readout time of the field map file:\n";
     t1.Print();
 
-    //magField->Print();
     R3BTPropagator * fPropagator = new R3BTPropagator(magField, kFALSE);
 
-    run_MDF(is_PCA,fPropagator);
+    // Run the MDF
+    run_MDF(is_PCA, fPropagator);
 
     return 0;
 }

@@ -666,5 +666,25 @@ void ToFD_crystal_calibration_v7(){
     gPad->SetLogz();
     bar_Eloss_end_rec[3]->Draw("colz");
 
+    // Save the bar_Eloss histograms as PDF in ./pdf
+    gSystem->mkdir("pdf", kTRUE);
+    gStyle->SetOptStat(0);
+    TCanvas* c_save = new TCanvas("c_save", "c_save");
+    c_save->SetLogz();
+    for (int a = 0; a < 4; ++a) {
+        if (bar_Eloss[a]) {
+            bar_Eloss[a]->Draw("colz");
+            c_save->SaveAs(Form("pdf/bar_Eloss_%d.pdf", a+1));
+        }
+        if (bar_Eloss_rec[a]) {
+            bar_Eloss_rec[a]->Draw("colz");
+            c_save->SaveAs(Form("pdf/bar_Eloss_rec_%d.pdf", a+1));
+        }
+        if (bar_Eloss_rec_quad[a]) {
+            bar_Eloss_rec_quad[a]->Draw("colz");
+            c_save->SaveAs(Form("pdf/bar_Eloss_rec_quad_%d.pdf", a+1));
+        }
+    }
+    delete c_save;
 
 }

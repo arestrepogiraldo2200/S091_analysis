@@ -8,7 +8,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Definitions of strings and histograms
-char fname1[200], fname2[200], fname3[200], fname4[200], fname5[200];
+char fname1[200], fname2[200], fname3[200], fname4[200], fname5[200], fname6[200], fname7[200], fname8[200], fname9[200], fname10[200], fname11[200], fname12[200], fname13[200];
 int tpat;
 // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
 // TString MDF_PoQ_file = "./10C_MDF_params.txt";
@@ -19,20 +19,20 @@ int tpat;
 TString MDF_PoQ_file = "./MDF_params.txt";
 // TString MDF_PoQ_file = "./MDF_PoQ_1456A_20240221.txt";
 
-const TString isotopeTag = "AllC_opt";
+const TString isotopeTag = "12C274_opt";
 const TString outputRootDir = Form("%s_mdf", isotopeTag.Data());
 const TString outputPngDir = Form("%s_mdf", isotopeTag.Data());
-const TString detectorLabFile = Form("%s_lab.root", isotopeTag.Data());
+const TString detectorLabFile = Form("%s/%s_lab.root", outputRootDir.Data(), isotopeTag.Data());
 const TString outputRootFile = Form("%s/%s_mdf.root", outputRootDir.Data(), isotopeTag.Data());
 
 // Constant beta. Calculated with lise++ from the Brho of FRS
 // const double beta_b  = 0.6832911;   // 10C
 // const double beta_b  = 0.7212162;   // 11C
-const double beta_b  = 0.7409629;   // 12C
+// const double beta_b  = 0.7409629;   // 12C
 // const double beta_b  = 0.7813805;   // 13C
 // const double beta_b  = 0.8052148;   // 14C
+// const double gamma_b = 1.0/std::sqrt(1.0-beta_b*beta_b);
 
-const double gamma_b = 1.0/std::sqrt(1.0-beta_b*beta_b);
 const double factor_b  = 3.33555703802535; 
 const double mu = 0.93149410372;
 
@@ -66,6 +66,10 @@ TH1D* h_hits_FI33;
 TH1D* h_hits_TOFD;
 TH1D* h_hits_FRS;
 
+// TOFD charge per plane
+TH2F* bar_Eloss[4];
+TH2F* bar_Eloss_rec[4];
+
 // Correlation
 TH2D* h_FI33_FI32_X;
 TH2D* h_FI31_FI32_X;
@@ -78,6 +82,10 @@ TH1D* h_AoQ;
 
 // Correlated area
 TH2D* h_FIB31_FIB33_combined_FIB32_area;
+
+// Correlated Brho and beta
+TH2D* h_Brho;
+TH2D* h_Beta;
 
 // Charge and momentum space
 TH2D* h_PoQvsQ;
@@ -183,7 +191,7 @@ double averageMWPC1(std::string filename){
             }
         }
 
-        if (!((TofdHitPerEvent == 4 || TofdHitPerEvent == 5) &&
+        if (!(TofdHitPerEvent == 4  &&
               LosHitPerEvent == 1 &&
               mwpc1Hits == 1 &&
               Fi32HitPerEvent == 1 &&
@@ -355,7 +363,7 @@ void MDF_s118_OPTIMIZED(){
     /////////////////////////////////////////////////////////////////////////////////////////
     // Set histograms canvas and axis titles here
 
-    int fiber_bins = 150; 
+    int fiber_bins = 100; 
     int mwpc1_bins = 200; 
 
     // X-position histograms
@@ -438,37 +446,71 @@ void MDF_s118_OPTIMIZED(){
     h_PoQ = new TH1D("PoQ from MDF","PoQ from MDF", 5000, 0, 4);
     h_PoQ->GetXaxis()->SetTitle("PoQ [GeV/c]");
 
-    h_PoQvsQ = new TH2D("P/Q vs Q from MDF","P/Q vs Q from MDF", 5000, 0, 4, 3000, 0, 8);
+    h_PoQvsQ = new TH2D("Q vs P/Q from MDF","Q vs P/Q from MDF", 5000, 0, 4, 3000, 0, 8);
     h_PoQvsQ->GetXaxis()->SetTitle("PoQ [GeV/c]");
     h_PoQvsQ->GetYaxis()->SetTitle("Q");
 
+    h_Brho = new TH2D("Brho FRS vs MDF","Brho FRS vs MDF", 3000, 5, 8, 3000, 5, 8);
+    h_Brho->GetXaxis()->SetTitle("FRS Brho [Tm]");
+    h_Brho->GetYaxis()->SetTitle("MDF Brho [Tm]");
+
+    h_Beta = new TH2D("Beta FRS vs MDF","Beta FRS vs MDF", 3000, 0, 1, 3000, 5, 8);
+    h_Beta->GetXaxis()->SetTitle("FRS Beta [Tm]");
+    h_Beta->GetYaxis()->SetTitle("MDF Brho [Tm]");
+
     // Mass A/Q
-    h_AoQ = new TH1D("AoQ from MDF","AoQ from MDF", 2000, 0, 4);
+    h_AoQ = new TH1D("AoQ from MDF","AoQ from MDF", 5000, 0, 4);
     h_AoQ->GetXaxis()->SetTitle("AoQ");
 
-    h_AoQvsQ = new TH2D("A/Q vs Q from MDF","A/Q vs Q from MDF", 2000, 0, 4, 3000, 0, 8);
+    h_AoQvsQ = new TH2D("Q vs A/Q from MDF", "Q vs A/Q from MDF", 5000, 0, 4, 3000, 0, 8);
     h_AoQvsQ->GetXaxis()->SetTitle("AoQ");
     h_AoQvsQ->GetYaxis()->SetTitle("Q");
 
-    h_AoZvsZ_FRS = new TH2D("A/Z vs Z incomming","A/Z vs Z incomming", 5000, 0, 4, 3000, 0, 8);
+    h_AoZvsZ_FRS = new TH2D("A/Q vs Q incomming","A/Q vs Q incomming", 5000, 0, 6, 3000, 0, 8);
     h_AoZvsZ_FRS->GetXaxis()->SetTitle("AoZ");
     h_AoZvsZ_FRS->GetYaxis()->SetTitle("Z");
 
-    h_AoZvsZ_FRS_cut = new TH2D("A/Z vs Z incomming cut","A/Z vs Z incomming cut", 5000, 0, 4, 3000, 0, 8);
-    h_AoZvsZ_FRS_cut->GetXaxis()->SetTitle("AoZ");
-    h_AoZvsZ_FRS_cut->GetYaxis()->SetTitle("Z");
+    h_AoZvsZ_FRS_cut = new TH2D("A/Q vs Q incomming cut","A/Q vs Q incomming cut", 5000, 0, 6, 3000, 0, 8);
+    h_AoZvsZ_FRS_cut->GetXaxis()->SetTitle("AoQ");
+    h_AoZvsZ_FRS_cut->GetYaxis()->SetTitle("Q");
+
+    // ToFD planes charges control
+    int max_charge = 8;
+    int nbins_Q = 2000;
+
+    bar_Eloss[0] = new TH2F("Eloss plane 1", "Eloss plane 1", 44, 0, 45, nbins_Q, 0, max_charge);
+    bar_Eloss[1] = new TH2F("Eloss plane 2", "Eloss plane 2", 44, 0, 45, nbins_Q, 0, max_charge);
+    bar_Eloss[2] = new TH2F("Eloss plane 3", "Eloss plane 3", 44, 0, 45, nbins_Q, 0, max_charge);
+    bar_Eloss[3] = new TH2F("Eloss plane 4", "Eloss plane 4", 44, 0, 45, nbins_Q, 0, max_charge);
+
+    bar_Eloss_rec[0] = new TH2F("Eloss plane 1 recalibrated", "Eloss plane 1 recalibrated", 44, 0, 45, nbins_Q, 0, max_charge);
+    bar_Eloss_rec[1] = new TH2F("Eloss plane 2 recalibrated", "Eloss plane 2 recalibrated", 44, 0, 45, nbins_Q, 0, max_charge);
+    bar_Eloss_rec[2] = new TH2F("Eloss plane 3 recalibrated", "Eloss plane 3 recalibrated", 44, 0, 45, nbins_Q, 0, max_charge);
+    bar_Eloss_rec[3] = new TH2F("Eloss plane 4 recalibrated", "Eloss plane 4 recalibrated", 44, 0, 45, nbins_Q, 0, max_charge);
+
+    for(int a=0; a<4; a++) {
+        bar_Eloss[a]->GetXaxis()->SetTitle("Bar ID");
+        bar_Eloss[a]->GetYaxis()->SetTitle("Q"); 
+
+        bar_Eloss_rec[a]->GetXaxis()->SetTitle("Bar ID");
+        bar_Eloss_rec[a]->GetYaxis()->SetTitle("Q"); 
+    }   
 
     // TOFD recalibration
     LoadCalibrationMatrix("./recalib_tofd_c0.txt", recalib_tofd_c0);
     LoadCalibrationMatrix("./recalib_tofd_c1.txt", recalib_tofd_c1);
     LoadCalibrationMatrix("./recalib_tofd_c2.txt", recalib_tofd_c2);
 
+    // LoadCalibrationMatrix("./quad_c0.txt", recalib_tofd_c0);
+    // LoadCalibrationMatrix("./quad_c1.txt", recalib_tofd_c1);
+    // LoadCalibrationMatrix("./quad_c2.txt", recalib_tofd_c2);
+
     /////////////////////////////////////////////////////////////////////////////////////////
     // Load the root file 
 
     TChain* chain = new TChain("evt"); 
     //sprintf(fname1,"./merged_MDF_runs.root"); 
-    sprintf(fname1,"./merged_MDF_runs_v3.root");
+    // sprintf(fname1,"./merged_MDF_runs_v3.root");
 
     // sprintf(fname1,"./main0326_0001_unpacked_MDF_v3.root");        // 10C
     // sprintf(fname1,"./main0321_0001_unpacked_MDF_v3.root");        // 11C
@@ -477,11 +519,27 @@ void MDF_s118_OPTIMIZED(){
     // sprintf(fname1,"./main0325_0001_unpacked_MDF_v3.root");        // 14C
 
     // sprintf(fname1,"./merged_partial.root"); 
+    // sprintf(fname1,"./main0280_0001_unpacked_los.root");
+    // sprintf(fname1,"./main0252_0001_unpacked_los.root");
     // sprintf(fname1,"./main0252_0001_unpacked_MDF_2.root");
     // sprintf(fname1,"./main0280_0001_unpacked_los.root");
 
+    sprintf(fname1,"./main0274_0001_unpacked_los.root");
+    sprintf(fname2,"./main0275_0001_unpacked_los.root");
+    sprintf(fname3,"./main0276_0001_unpacked_los.root");
+    sprintf(fname4,"./main0277_0001_unpacked_los.root");
+    sprintf(fname5,"./main0278_0001_unpacked_los.root");
+    sprintf(fname6,"./main0279_0001_unpacked_los.root");
+    sprintf(fname7,"./main0280_0001_unpacked_los.root");
+    sprintf(fname8,"./main0281_0001_unpacked_los.root");
+    sprintf(fname9,"./main0282_0001_unpacked_los.root");
+    sprintf(fname10,"./main0283_0001_unpacked_los.root");
+    sprintf(fname11,"./main0284_0001_unpacked_los.root");
+    sprintf(fname12,"./main0285_0001_unpacked_los.root");
+    sprintf(fname13,"./main0286_0001_unpacked_los.root");
+
     // Cut in FRS incomming beam
-    FRS_CUT = false;
+    FRS_CUT = true;
 
     chain->Reset();
     chain->Add(fname1); 
@@ -489,80 +547,89 @@ void MDF_s118_OPTIMIZED(){
     // chain->Add(fname3); 
     // chain->Add(fname4); 
     // chain->Add(fname5); 
+    // chain->Add(fname6); 
+    // chain->Add(fname7); 
+    // chain->Add(fname8); 
+    // chain->Add(fname9); 
+    // chain->Add(fname10); 
+    // chain->Add(fname11); 
+    // chain->Add(fname12); 
+    // chain->Add(fname13); 
 
-    double MWPC_avrg = averageMWPC1(fname1);
+    double MWPC_avrg, MWPC_avrg1, MWPC_avrg2, MWPC_avrg3, MWPC_avrg4, MWPC_avrg5, MWPC_avrg6, MWPC_avrg7, MWPC_avrg8, MWPC_avrg9, MWPC_avrg10, MWPC_avrg11, MWPC_avrg12, MWPC_avrg13;
+    
+    MWPC_avrg1 = averageMWPC1(fname1);
+    // MWPC_avrg2 = averageMWPC1(fname2);
+    // MWPC_avrg3 = averageMWPC1(fname3);
+    // MWPC_avrg4 = averageMWPC1(fname4);
+    // MWPC_avrg5 = averageMWPC1(fname5);
+    // MWPC_avrg6 = averageMWPC1(fname6);
+    // MWPC_avrg7 = averageMWPC1(fname7);
+    // MWPC_avrg8 = averageMWPC1(fname8);
+    // MWPC_avrg9 = averageMWPC1(fname9);
+    // MWPC_avrg10 = averageMWPC1(fname10);
+    // MWPC_avrg11 = averageMWPC1(fname11);
+    // MWPC_avrg12 = averageMWPC1(fname12);
+    // MWPC_avrg13 = averageMWPC1(fname13);
+
+    // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5 + MWPC_avrg6 + MWPC_avrg7 + MWPC_avrg8 + MWPC_avrg9 + MWPC_avrg10 + MWPC_avrg11 + MWPC_avrg12 + MWPC_avrg13)/13;
+    MWPC_avrg = MWPC_avrg1;
 
     // Load the branches with data as TClonesArrays 
 	R3BEventHeader* header = new R3BEventHeader;    
-    TBranch* branchData = chain->GetBranch("EventHeader.");
-    branchData->SetAddress(&header);  
-    
+    chain->SetBranchAddress("EventHeader.", &header);
+
+
     TClonesArray*  hitLOS = new TClonesArray("R3BLosHitData",5); 
-	R3BLosHitData** hitLos;                                      
-	TBranch *branchHitLOS = chain->GetBranch("LosHit");           
-	branchHitLOS->SetAddress(&hitLOS);                            
+	R3BLosHitData** hitLos;            
+    chain->SetBranchAddress("LosHit", &hitLOS);                        
 	Long64_t LosHitPerEvent = 0;  
 
 
     TClonesArray* hitMWPC1 = new TClonesArray("R3BMwpcHitData",5);
     R3BMwpcHitData** hitMwpc1;
-    TBranch *branchHitMWPC1 = chain->GetBranch("Mwpc1HitData");
-    branchHitMWPC1->SetAddress(&hitMWPC1);
+    chain->SetBranchAddress("Mwpc1HitData", &hitMWPC1);
     Long64_t Mwpc1HitPerEvent = 0;  	
 
 
     TClonesArray* hitFI31 = new TClonesArray("R3BFiberMAPMTHitData",5);
 	R3BFiberMAPMTHitData** hitFi31;
-	TBranch *branchHitFI31 = chain->GetBranch("Fi31Hit");
-	branchHitFI31->SetAddress(&hitFI31);
+    chain->SetBranchAddress("Fi31Hit", &hitFI31);
 	Long64_t Fi31HitPerEvent = 0;  	
 
 
     TClonesArray* hitFI32 = new TClonesArray("R3BFiberMAPMTHitData",5);
 	R3BFiberMAPMTHitData** hitFi32;
-	TBranch *branchHitFI32 = chain->GetBranch("Fi32Hit");
-	branchHitFI32->SetAddress(&hitFI32);
+    chain->SetBranchAddress("Fi32Hit", &hitFI32);
 	Long64_t Fi32HitPerEvent = 0;  	
 
 
     TClonesArray* hitFI33 = new TClonesArray("R3BFiberMAPMTHitData",5);
 	R3BFiberMAPMTHitData** hitFi33;
-	TBranch *branchHitFI33 = chain->GetBranch("Fi33Hit");
-	branchHitFI33->SetAddress(&hitFI33);
+    chain->SetBranchAddress("Fi33Hit", &hitFI33);
 	Long64_t Fi33HitPerEvent = 0;  	
 
 
 	TClonesArray* hitTOFD = new TClonesArray("R3BTofdHitData",5);
 	R3BTofdHitData** hitTofd;
-	TBranch *branchHitTOFD = chain->GetBranch("TofdHit");
-	branchHitTOFD->SetAddress(&hitTOFD);
+	chain->SetBranchAddress("TofdHit", &hitTOFD);
 	Long64_t TofdHitPerEvent = 0;  	
 
 
     TClonesArray* hitCALIFA = new TClonesArray("R3BCalifaClusterData",5);
 	R3BCalifaClusterData** clusterCalifa;
-	TBranch *branchHitCALIFA = chain->GetBranch("CalifaClusterData");
-	branchHitCALIFA->SetAddress(&hitCALIFA);
-	Long64_t CalifaHitPerEvent = 0;  	
+	chain->SetBranchAddress("CalifaClusterData", &hitCALIFA);
+	Long64_t CalifaHitPerEvent = 0;  
+
 
     TClonesArray* hitFRS = nullptr;
-    R3BFrsData** hitFrs = nullptr;
-    TBranch* branchHitFRS = nullptr;
-    Long64_t FrsHitPerEvent = 0;
+    R3BFrsData** hitFrs;
+    Long64_t FrsHitPerEvent;
 
-    
     if (FRS_CUT){
-        TClonesArray* hitFRS = new TClonesArray("R3BFrsData",5);
-        R3BFrsData** hitFrs;
-        TBranch *branchHitFRS = chain->GetBranch("FrsData");
-        branchHitFRS->SetAddress(&hitFRS);
-        Long64_t FrsHitPerEvent = 0; 
-    }
-    else{
-        TClonesArray* hitFRS = nullptr;
-        R3BFrsData** hitFrs = nullptr;
-        TBranch* branchHitFRS = nullptr;
-        Long64_t FrsHitPerEvent = 0;
+        hitFRS = new TClonesArray("R3BFrsData",5);
+        chain->SetBranchAddress("FrsData", &hitFRS);
+        FrsHitPerEvent = 0;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -576,6 +643,7 @@ void MDF_s118_OPTIMIZED(){
     DetectorPosition fib32{};
     DetectorPosition fib3133{};
 
+    gSystem->mkdir(outputRootDir, kTRUE);
     TFile* detectorFile = new TFile(detectorLabFile, "RECREATE");
     detectorFile->cd();
 
@@ -606,6 +674,11 @@ void MDF_s118_OPTIMIZED(){
     double AoZ0_plot; 
     double AoZ_semimajor_plot;
     double Z_semimajor_plot; 
+
+    // FRS values
+    double FRSBeta;
+    double FRSBrho;
+    double FRSgamma;
 
 	for(Long64_t e=0; e < nevent; e++){
 
@@ -666,7 +739,8 @@ void MDF_s118_OPTIMIZED(){
         // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
 
         /////////////////////////////////////////////////////////////////////////////////////////
-        if ((TofdHitPerEvent == 4 || TofdHitPerEvent == 5) && LosHitPerEvent  == 1 && Mwpc1HitPerEvent == 1 && Fi32HitPerEvent == 1 && (Fi31HitPerEvent == 1 || Fi33HitPerEvent == 1) ){
+        // if ((TofdHitPerEvent == 4 || TofdHitPerEvent == 5) && LosHitPerEvent  == 1 && Mwpc1HitPerEvent == 1 && Fi32HitPerEvent == 1 && (Fi31HitPerEvent == 1 || Fi33HitPerEvent == 1) ){
+        if (TofdHitPerEvent == 4 && LosHitPerEvent  == 1 && Mwpc1HitPerEvent == 1 && Fi32HitPerEvent == 1 && (Fi31HitPerEvent == 1 || Fi33HitPerEvent == 1) ){
 
             /////////////////////////////////////////////////////////////////////////////////////////
             // Incomming PID
@@ -680,8 +754,11 @@ void MDF_s118_OPTIMIZED(){
                 for(int p = 0; p < FrsHitPerEvent; p++){
 
                     hitFrs[p] = (R3BFrsData*)hitFRS->At(p);
-                    double AoZ = hitFrs[p]->GetAq();     
+                    double AoZ = hitFrs[p]->GetAq();                      
                     double Z   = hitFrs[p]->GetZ();   
+                    FRSBeta   = hitFrs[p]->GetBeta();   
+                    FRSBrho   = hitFrs[p]->GetBrho(); 
+                    FRSgamma  = 1.0/std::sqrt(1.0-FRSBeta*FRSBeta);  
 
                     h_AoZvsZ_FRS->Fill(AoZ, Z);
 
@@ -722,12 +799,35 @@ void MDF_s118_OPTIMIZED(){
                 int TOFD_Id  = hitTofd[p]->GetDetId();     
                 int bar      = hitTofd[p]->GetBarId();   
                 double Eloss = hitTofd[p]->GetEloss();
-                double Eloss_new = recalib_tofd_c0[TOFD_Id-1][bar-1] + recalib_tofd_c1[TOFD_Id-1][bar-1]*Eloss + recalib_tofd_c2[TOFD_Id-1][bar-1]*Eloss*Eloss;
+                double Eloss_new;
+
+                if ( recalib_tofd_c0[TOFD_Id-1][bar-1]==0 && recalib_tofd_c1[TOFD_Id-1][bar-1]==0 && recalib_tofd_c2[TOFD_Id-1][bar-1]==0 ){
+                    Eloss_new = Eloss;
+                } 
+                else {
+                    Eloss_new = recalib_tofd_c0[TOFD_Id-1][bar-1] + recalib_tofd_c1[TOFD_Id-1][bar-1]*Eloss + recalib_tofd_c2[TOFD_Id-1][bar-1]*Eloss*Eloss;
+                }
 
                 totalEloss += Eloss_new;
 
                 double TOFD_X = hitTofd[p]->GetX();
                 h_TOFD_X->Fill(TOFD_X);
+
+                // Histograms per plane per bar
+                switch (TOFD_Id) {
+                    case 1:
+                        bar_Eloss[0]->Fill(bar, Eloss);
+                        bar_Eloss_rec[0]->Fill(bar, Eloss_new);
+                    case 2:
+                        bar_Eloss[1]->Fill(bar, Eloss);
+                        bar_Eloss_rec[1]->Fill(bar, Eloss_new);
+                    case 3:
+                        bar_Eloss[2]->Fill(bar, Eloss);
+                        bar_Eloss_rec[2]->Fill(bar, Eloss_new);
+                    case 4:
+                        bar_Eloss[3]->Fill(bar, Eloss);
+                        bar_Eloss_rec[3]->Fill(bar, Eloss_new);
+                }
             }
 
             // If the average charge is charge 6
@@ -862,7 +962,6 @@ void MDF_s118_OPTIMIZED(){
 
                     h_MWPC1_FI32_X_single_corr->Fill( MWPC1_hit[0]->GetX() , FI32_corr_hit[0].GetX());
 
-
                     if (FI33_corr_hit.size()>0 && FI31_corr_hit.size()>0 && FI32_corr_hit.size()>0){
 
                         // Calculation of area
@@ -893,10 +992,6 @@ void MDF_s118_OPTIMIZED(){
                 for (int mult = 1; mult <= FI32_corr_hit.size(); mult++){
 
                     // Corrections for parallel transport of the trajectory so that MWPC1 peak is at zero
-
-                    const Double_t Angle = (72 ) * TMath::Pi() / 180.;
-                    const Double_t compl_Angle = (18 ) * TMath::Pi() / 180.;
-
                     //                                                       MWPC_avrg < 0 so this term is positive as it should be
                     Candidate.mwpc1_dhit.SetXYZ( MWPC1_hit[0]->GetX()/10.0 - MWPC_avrg/10.0  , 0., 0.);          // MWPC1_hit[0]->GetX())/10 +6.8, (MWPC1_hit[0]->GetY())/10.
                     
@@ -937,10 +1032,10 @@ void MDF_s118_OPTIMIZED(){
                         // This will transform "det_point" vectors into lab frame
                         // Optimized values are set in the header file as the offsets
                         
-                        TransformPoint(t.mwpc1_lab,    mwpc1_angles + mwpc1_ang_offset ,
+                        TransformPoint(t.mwpc1_lab, mwpc1_angles + mwpc1_ang_offset ,
                                                     mwpc1_position + mwpc1_pos_offset);
 
-                        TransformPoint(t.fi32_lab,     fi32_angles + fi32_ang_offset ,
+                        TransformPoint(t.fi32_lab,  fi32_angles + fi32_ang_offset ,
                                                     fi32_position + fi32_pos_offset );
 
                         TransformPoint(t.fi33_lab,  fi33_angles + fi33_ang_offset ,
@@ -965,7 +1060,7 @@ void MDF_s118_OPTIMIZED(){
 
                         if (std::isnan(t.fi33_lab.X()) && std::isnan(t.fi33_lab.Y()) && std::isnan(t.fi33_lab.Z())) { 
                             fib3133.x = t.fi31_lab.X(); 
-                            fib3133.x = t.fi31_lab.Z();                 
+                            fib3133.x = t.fi33_lab.Z();                   
                         }  
                         
                         if (std::isnan(t.fi31_lab.X()) && std::isnan(t.fi31_lab.Y()) && std::isnan(t.fi31_lab.Z())) { 
@@ -975,18 +1070,27 @@ void MDF_s118_OPTIMIZED(){
 
                         detectorTree->Fill();
 
+                        // PoQ calculated values
                         h_PoQ->Fill(t.PoQ_mdf);
                         h_PoQvsQ->Fill(t.PoQ_mdf, averageEloss);
 
-                        // Calculation of A/Q using a constant beta
-                        double AoQ_cons = t.PoQ_mdf*(1)/(gamma_b*beta_b*mu);
-                        h_AoQ->Fill(AoQ_cons);
-                        h_AoQvsQ->Fill(AoQ_cons, averageEloss);
+                        // Brho calculated values
+                        h_Brho->Fill(FRSBrho, factor_b*t.PoQ_mdf);
+                        h_Beta->Fill(FRSBeta, factor_b*t.PoQ_mdf);
+
+                        // Calculation of A/Q using FRS beta
+                        double AoQ_FRS = t.PoQ_mdf*(1)/(FRSgamma*FRSBeta*mu);
+                        h_AoQ->Fill(AoQ_FRS);
+                        h_AoQvsQ->Fill(AoQ_FRS, averageEloss);
+
+                        // double AoQ_cons = t.PoQ_mdf*(1)/(gamma_b*beta_b*mu);
+                        // h_AoQ->Fill(AoQ_cons);
+                        // h_AoQvsQ->Fill(AoQ_cons, averageEloss);
 
                     }    
                 }               
             }
-
+            
             // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
         }          // ----> Hits events condition
     }              // ----> Loop over events
@@ -1057,7 +1161,7 @@ void MDF_s118_OPTIMIZED(){
 
     TCanvas* c_MWPC1_X  = new TCanvas();
     c_MWPC1_X->cd(1);
-    h_MWPC1_X->Draw("hist");
+    h_MWPC1_X->Draw("hist");    
 
     TCanvas* c_FI32_X  = new TCanvas();
     c_FI32_X->cd(1);
@@ -1074,6 +1178,40 @@ void MDF_s118_OPTIMIZED(){
     TCanvas* c_FICOMB_X  = new TCanvas();
     c_FICOMB_X->cd(1);
     h_FICOMB_X->Draw("hist");
+
+    // Original histograms
+    TCanvas* c_bar_Eloss0 = new TCanvas();
+    c_bar_Eloss0->cd(1);
+    bar_Eloss[0]->Draw("colz");
+
+    TCanvas* c_bar_Eloss1 = new TCanvas();
+    c_bar_Eloss1->cd(1);
+    bar_Eloss[1]->Draw("colz");
+
+    TCanvas* c_bar_Eloss2 = new TCanvas();
+    c_bar_Eloss2->cd(1);
+    bar_Eloss[2]->Draw("colz");
+
+    TCanvas* c_bar_Eloss3 = new TCanvas();
+    c_bar_Eloss3->cd(1);
+    bar_Eloss[3]->Draw("colz");
+
+    // Recalibrated histograms
+    TCanvas* c_bar_Eloss_rec0 = new TCanvas();
+    c_bar_Eloss_rec0->cd(1);
+    bar_Eloss_rec[0]->Draw("colz");
+
+    TCanvas* c_bar_Eloss_rec1 = new TCanvas();
+    c_bar_Eloss_rec1->cd(1);
+    bar_Eloss_rec[1]->Draw("colz");
+
+    TCanvas* c_bar_Eloss_rec2 = new TCanvas();
+    c_bar_Eloss_rec2->cd(1);
+    bar_Eloss_rec[2]->Draw("colz");
+
+    TCanvas* c_bar_Eloss_rec3 = new TCanvas();
+    c_bar_Eloss_rec3->cd(1);
+    bar_Eloss_rec[3]->Draw("colz");
 
     ///////////////////////////////////////////////////////////////////
 
@@ -1144,6 +1282,14 @@ void MDF_s118_OPTIMIZED(){
     c_AoZvsZ_FRS->cd(1);
     h_AoZvsZ_FRS->Draw("colz");
 
+    TCanvas* C_Brho = new TCanvas();
+    C_Brho->cd(1);
+    h_Brho->Draw("colz");
+
+    TCanvas* C_Beta = new TCanvas();
+    C_Beta->cd(1);
+    h_Beta->Draw("colz");
+
     if (FRS_CUT){
         TEllipse* ellipse_AoZvsZ_FRS = new TEllipse(AoZ0_plot, Z0_plot, AoZ_semimajor_plot, Z_semimajor_plot);
         ellipse_AoZvsZ_FRS->SetLineColor(kRed);
@@ -1201,6 +1347,16 @@ void MDF_s118_OPTIMIZED(){
     h_AoQvsQ->Write();
     h_AoZvsZ_FRS->Write();
     h_AoZvsZ_FRS_cut->Write();
+    bar_Eloss[0]->Write();
+    bar_Eloss[1]->Write();
+    bar_Eloss[2]->Write();
+    bar_Eloss[3]->Write();
+    bar_Eloss_rec[0]->Write();
+    bar_Eloss_rec[1]->Write();
+    bar_Eloss_rec[2]->Write();
+    bar_Eloss_rec[3]->Write();
+    h_Brho->Write();
+    h_Beta->Write();
 
     rootFile->Close();
 

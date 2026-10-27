@@ -103,7 +103,7 @@ bool ExtractData(Data &d, R3BTPropagator* fPropagator)
                 break;
 
             case 2: // Fib31 & Fib33 (X) 
-                det_to_TP = fi_33_to_TP + gRandom->Uniform(-25., 25.);            // Convention to project Fib31 to the x-positions of Fib33 
+                det_to_TP = fi_33_to_TP + gRandom->Uniform(-10., 10.);            // Convention to project Fib31 to the x-positions of Fib33 
                 z1 = Target_to_TP + det_to_TP * TMath::Cos(Angle);
                 x1 = 0. - (det_to_TP * TMath::Sin(Angle));
                 z2 = z1 + 10 * TMath::Cos(Angle_det);
@@ -362,7 +362,7 @@ void Save_PCA_params(TPrincipal* pca, const char * filename)
 //Main function for MDF fit called from main()
 void run_MDF(Bool_t use_PCA, R3BTPropagator * fPropagator)
 {
-    TApplication* theApp = new TApplication("App", 0, 0);
+    gROOT->SetBatch(kTRUE);
     TFile* output = new TFile("output/MDF.root", "RECREATE");
 
     // Store the positions of the propagated particles  ////////////////////////////////////////////////////////////////////////////
@@ -713,47 +713,62 @@ void run_MDF(Bool_t use_PCA, R3BTPropagator * fPropagator)
     // X_Fiber->Write();
     // Z_Fiber->Write();
 
-    TY1->Write();
+     TY1->Write();
     TX1->Write();
 
     detectorTree->Write();
+    h_beam_x_vs_y->Write();
+    h_beam_tx_vs_ty->Write();
     MWPC1_xz->Write();
     Fib32_xz->Write();
     Fib3133_xz->Write();
+    h_lab_xz->Write();
 
-    cout << "\n-- FINISH --" << endl;
+    output->cd();
+    h_track_vs_fit->Write();
+    h_residual->Write();
+    h_residual_vs_track->Write();
+    h_track->Write();
+
     TCanvas * c1 = new TCanvas("c1","c1",1000,1000);
     c1->Divide(2,2);
     c1->cd(1);
-    // h_track_vs_fit->Draw("colz");
+    h_track_vs_fit->Draw("colz");
     c1->cd(2);
-    // h_residual->Draw();
-    h_residual->Fit("gaus");
+    h_residual->Draw();
     c1->cd(3);
-    // h_residual_vs_track->Draw("colz");
+    h_residual_vs_track->Draw("colz");
     c1->cd(4);
-    // h_track->Draw();
+    h_track->Draw();
     c1->Write();
-    //h_lab_xz->Write();
 
     TCanvas * c2 = new TCanvas("c2","c2",1200,900);
     c2->Divide(2,2);
     c2->cd(1);
-    // MWPC1_xz->Draw("colz");
+    h_beam_x_vs_y->Draw("colz");
+    c2->cd(2);
+    h_beam_tx_vs_ty->Draw("colz");
     c2->cd(3);
-    // Fib32_xz->Draw("colz");
+    MWPC1_xz->Draw("colz");
     c2->cd(4);
-    // Fib3133_xz->Draw("colz");
+    Fib32_xz->Draw("colz");
     c2->Write();
+
+    TCanvas * c3 = new TCanvas("c3","c3",1200,900);
+    c3->Divide(1,2);
+    c3->cd(1);
+    Fib3133_xz->Draw("colz");
+    c3->cd(2);
+    h_lab_xz->Draw("colz");
+    c3->Write();
+
+    cout << "\n-- FINISH --" << endl;
 
     output->Write();
     file->Write();
     //output->Close();
     file->Close();
     //delete output;
-    c1->Update();
-    c2->Update();
-    theApp->Run();
     return;
 }
 

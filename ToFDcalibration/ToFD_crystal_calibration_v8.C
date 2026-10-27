@@ -41,10 +41,15 @@ TH2F* bar_Eloss_end_rec[4];
 
 void ToFD_crystal_calibration_v8(){
 
+    gStyle->SetOptStat(1111);
+    gStyle->SetOptTitle(1);
+    gROOT->ForceStyle();
+
     /////////////////////////////////////////////////////////////////////////////////////////
     // Load the root file 
     TChain* chain = new TChain("evt");
-    sprintf(fname, "./main0252_0001_unpacked_califa_ToFD_LOS.root");
+    // sprintf(fname, "./main0252_0001_unpacked_califa_ToFD_LOS.root");
+    sprintf(fname, "../MDF/main0274_0001_unpacked_los.root");
 
     chain->Reset();
     chain->Add(fname); 
@@ -480,6 +485,9 @@ void ToFD_crystal_calibration_v8(){
                 if (quad_c0[a][b] != 0 && quad_c1[a][b] != 0 && quad_c2[a][b] != 0){
                     bar_Eloss_rec[plane]->Fill(bar, Q_new, content);
                 } 
+                else {
+                    bar_Eloss_rec[plane]->Fill(bar, Q, content);
+                }
             }
         }
     }
@@ -649,6 +657,9 @@ void ToFD_crystal_calibration_v8(){
                 if (quad_c0[a][b] != 0 && quad_c1[a][b] != 0 && quad_c2[a][b] != 0){
                     bar_Eloss_end_rec[plane]->Fill(bar, Q_new, content);
                 } 
+                else {
+                    bar_Eloss_end_rec[plane]->Fill(bar, Q, content);
+                }
             }
         }
     }
@@ -714,4 +725,32 @@ void ToFD_crystal_calibration_v8(){
     legend->AddEntry(projY_rec,"Recalibrated","l");
     legend->Draw();
 
+    gSystem->mkdir("pdf", kTRUE);
+    TCanvas* c_eloss_end[4] = {c_bar_Eloss0_end, c_bar_Eloss1_end, c_bar_Eloss2_end, c_bar_Eloss3_end};
+    TCanvas* c_eloss_end_rec[4] = {c_bar_Eloss_rec0_end, c_bar_Eloss_rec1_end, c_bar_Eloss_rec2_end, c_bar_Eloss_rec3_end};
+    for (int a = 0; a < 4; ++a) {
+        c_eloss_end[a]->SaveAs(Form("pdf/bar_Eloss_end_%d.pdf", a+1));
+        c_eloss_end_rec[a]->SaveAs(Form("pdf/bar_Eloss_end_rec_%d.pdf", a+1));
+    }
+    c_projY_compare->SaveAs("pdf/projY.pdf");
+
+    // Save all histograms in a ROOT file
+    TFile* fout = TFile::Open("ToFD_crystal_calibration_v8_histograms.root", "RECREATE");
+    for (int a = 0; a < 4; ++a) {
+        for (int b = 0; b < 44; ++b) {
+            if (plane_bar[a][b])         plane_bar[a][b]->Write();
+            if (plane_bar_copy[a][b])    plane_bar_copy[a][b]->Write();
+            if (plane_bar_rec[a][b])     plane_bar_rec[a][b]->Write();
+            if (plane_bar_end[a][b])     plane_bar_end[a][b]->Write();
+            if (plane_bar_end_rec[a][b]) plane_bar_end_rec[a][b]->Write();
+        }
+        if (bar_Eloss[a])         bar_Eloss[a]->Write();
+        if (bar_Eloss_rec[a])     bar_Eloss_rec[a]->Write();
+        if (bar_Eloss_rec_quad[a]) bar_Eloss_rec_quad[a]->Write();
+        if (bar_Eloss_end[a])     bar_Eloss_end[a]->Write();
+        if (bar_Eloss_end_rec[a]) bar_Eloss_end_rec[a]->Write();
+    }
+    projY->Write("projY_not_calibrated");
+    projY_rec->Write("projY_recalibrated");
+    fout->Close();
 }

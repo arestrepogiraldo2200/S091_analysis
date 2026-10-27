@@ -10,13 +10,44 @@
 
 using namespace std;
 
+void TransformPoint(TVector3& point, TVector3 rot, TVector3 trans)
+{
+    TRotation r;
+    // First Euler rotation around Y axis
+    r.RotateY(rot.Y());
+
+    // get local X axis after first rotation
+    TVector3 v3_localX(1, 0, 0);
+    v3_localX.SetTheta(r.ThetaX());
+    v3_localX.SetPhi(r.PhiX());
+
+    // Second Euler rotation around local X axis
+    r.Rotate(rot.X(), v3_localX);
+
+    // get local Z axis after second rotation
+    TVector3 v3_localZ(0, 0, 1);
+    v3_localZ.SetTheta(r.ThetaZ());
+    v3_localZ.SetPhi(r.PhiZ());
+
+    // final rotation around local Z axis
+    r.Rotate(rot.Z(), v3_localZ);
+
+    // Applying rotation
+    point.Transform(r);
+
+    // Applying translation
+    point += trans;
+
+    return;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-R3BTrackingParticle Generate_Primary()
-{
+R3BTrackingParticle Generate_Primary(){
+
     const Double_t  Ekin_Total = BEAM_EKIN_GEV_U * BEAM_MASS_GEV_C2/AMU;
     Double_t P, Theta, RCos, Phi, vx, vy, vz, Angle, Rand_R, beta;
     TVector3 PVector;
@@ -58,18 +89,23 @@ R3BTrackingParticle Generate_Primary()
 ////////////////////////////////////////////////////////////////////////////
 
 //----------- Obtain track points as measured in the experiment ------------
-bool ExtractData(Data &d, R3BTPropagator* fPropagator)
-{
+bool ExtractData(Data &d, R3BTPropagator* fPropagator){
     double x,x1,x2,z,z1,z2,y,y1,y2,det_to_TP;//coordinates of the detector plane 
     TVector3 position = d.primary.GetStartPosition();
     TVector3 momentum = d.primary.GetStartMomentum();
     TVector3 v1, v2, v3;//points on the the plane for propagation
+    TVector3 rot, trans;//points on the the plane for propagation
     R3BTrackingParticle * particle;
     TVector3 points[4];
     TVector3 mom_track[4];
     Double_t length[4];
     Double_t tof[4];
     int i =0;
+
+    double z_offset;
+    double x_offset;
+    double y_rot;
+    double z_rot;
 
     particle = new R3BTrackingParticle(BEAM_Z,
                 position.X(),
@@ -81,56 +117,136 @@ bool ExtractData(Data &d, R3BTPropagator* fPropagator)
                 d.primary.GetBeta(),
                 d.primary.GetMass());
 
-    //Assuming 3 detectors where the trajectories are measured
-    for(i=0; i<3; i++)
-    {
+    //Assuming 4 detectors where the trajectories are measured
+    for(i=0; i<4; i++){
+
         //Calculate x, and z to define the detector plane
-        switch(i)
-        {
+        switch(i){
+
             case 0: // MWPC1 (X)
+
+                z_offset = 4.91053;
+                x_offset = 0.62705;
+                y_rot= 0;
+                z_rot= 0;
+
                 z1 = targ_to_mwpc1 + gRandom->Uniform(-10.0, 10.0);
                 x1 = 0;
                 z2 = z1;
                 x2 = Xmax;
+
+                v1.SetXYZ(x1,    0, z1);                // Central det point 
+                v2.SetXYZ(x1, Ymax, z1);                // Vertical det point above central
+                v3.SetXYZ(x2,    0, z2);                // 3rd point to define the plane
+
+
+                // Seting the transformation vectors
+                rot.SetXYZ(0, y_rot, z_rot);
+                trans.SetXYZ(x_offset, 0, z_offset);
+
+                // Correction from the optimization
+                TransformPoint(v1, rot, trans);
+                TransformPoint(v2, rot, trans);
+                TransformPoint(v3, rot, trans);
+        
                 break;
 
             case 1: // Fib32 (X) 
                 det_to_TP = fi_32_to_TP + gRandom->Uniform(-10., 10.);
+
+                z_offset =  2.14528;
+                x_offset = -4.73033;
+                y_rot= -0.144427;
+                z_rot= -0.10782;
+
                 z1 = Target_to_TP + det_to_TP * TMath::Cos(Angle);
                 x1 = 0. - (det_to_TP * TMath::Sin(Angle));
+
                 z2 = z1 + 10 * TMath::Cos(Angle_det);
                 x2 = x1 + 10 * TMath::Sin(Angle_det);
+
+                v1.SetXYZ(x1,    0, z1);                // Central det point 
+                v2.SetXYZ(x1, Ymax, z1);                // Vertical det point above central
+                v3.SetXYZ(x2,    0, z2);                // 3rd point to define the plane
+
+                // Seting the transformation vectors
+                rot.SetXYZ(0, y_rot, z_rot);
+                trans.SetXYZ(x_offset, 0, z_offset);
+
+                // Correction from the optimization
+                TransformPoint(v1, rot, trans);
+                TransformPoint(v2, rot, trans);
+                TransformPoint(v3, rot, trans);
+
                 break;
 
-            case 2: // Fib31 & Fib33 (X) 
-                det_to_TP = fi_33_to_TP + gRandom->Uniform(-25., 25.);            // Convention to project Fib31 to the x-positions of Fib33 
+            case 2: // Fib33 (X) 
+
+                det_to_TP = fi_33_to_TP + gRandom->Uniform(-10., 10.);         
+
+                z_offset = -1.1072;
+                x_offset = -4.93043;
+                y_rot=  0.195477;
+                z_rot= -0.193539;
+
                 z1 = Target_to_TP + det_to_TP * TMath::Cos(Angle);
                 x1 = 0. - (det_to_TP * TMath::Sin(Angle));
+
                 z2 = z1 + 10 * TMath::Cos(Angle_det);
                 x2 = x1 + 10 * TMath::Sin(Angle_det);
-                break;    
+
+                v1.SetXYZ(x1,    0, z1);                // Central det point 
+                v2.SetXYZ(x1, Ymax, z1);                // Vertical det point above central
+                v3.SetXYZ(x2,    0, z2);                // 3rd point to define the plane
+
+                // Seting the transformation vectors
+                rot.SetXYZ(0, y_rot, z_rot);
+                trans.SetXYZ(x_offset, 0, z_offset);
+
+                // Correction from the optimization
+                TransformPoint(v1, rot, trans);
+                TransformPoint(v2, rot, trans);
+                TransformPoint(v3, rot, trans);
+
+                break;  
+                
+            case 3: // Fib31 (X) 
+
+                det_to_TP = fi_31_to_TP + gRandom->Uniform(-10., 10.);         
+
+                z_offset = -1.43749;
+                x_offset = -4.99979;
+                y_rot= -0.0373261;
+                z_rot= -0.0264633;
+
+                z1 = Target_to_TP + det_to_TP * TMath::Cos(Angle);
+                x1 = 0. - (det_to_TP * TMath::Sin(Angle));
+
+                z2 = z1 + 10 * TMath::Cos(Angle_det);
+                x2 = x1 + 10 * TMath::Sin(Angle_det);
+
+                v1.SetXYZ(x1,    0, z1);                // Central det point 
+                v2.SetXYZ(x1, Ymax, z1);                // Vertical det point above central
+                v3.SetXYZ(x2,    0, z2);                // 3rd point to define the plane
+
+                // Seting the transformation vectors
+                rot.SetXYZ(0, y_rot, z_rot);
+                trans.SetXYZ(x_offset, 0, z_offset);
+
+                // Correction from the optimization
+                TransformPoint(v1, rot, trans);
+                TransformPoint(v2, rot, trans);
+                TransformPoint(v3, rot, trans);
+
+                break; 
         }
 
         double tof_value = 0;
-        v1.SetXYZ(x1,0,z1); //central det point 
-        v2.SetXYZ(x1,Ymax,z1);//vertical det point above central
-        v3.SetXYZ(x2,0,z2);//3rd point to define the plane
 
-        //if(i == 2){
-        if(!fPropagator->PropagateToPlaneRK_eloss(particle,v1,v2,v3,tof_value,0.1,true)) 
-         {
+        if(!fPropagator->PropagateToPlaneRK_eloss(particle,v1,v2,v3,tof_value,0.1,true)) {
              cout << "\n\t-- WARNING! --> Failed propagation...";
              return false;
          }
-
-        /*}
-        else{
-         if(!fPropagator->PropagateToPlaneRK_eloss(particle,v1,v2,v3,tof_value,0.05,false)) 
-         {
-             cout << "\n\t-- WARNING! --> Failed propagation...";
-             return false;
-         }
-        }*/
    
         points[i] = particle->GetPosition();
         length[i] = particle->GetLength();
@@ -138,8 +254,7 @@ bool ExtractData(Data &d, R3BTPropagator* fPropagator)
         d.propagatedMomenta[i] = mom_track[i];
         tof[i] = tof_value;
         
-        if(isnan(points[i].X()) || isnan(points[i].Z()) || isnan(points[i].Y()))
-        {
+        if(isnan(points[i].X()) || isnan(points[i].Z()) || isnan(points[i].Y())){
             cout << "\n\t-- WARNING! --> Propagated NaN values!";
             return false;
         }
@@ -153,45 +268,12 @@ bool ExtractData(Data &d, R3BTPropagator* fPropagator)
     d.edata[++i] =  points[1].X();  // FIB32
     d.edata[++i] =  points[1].Z();
     
-    d.edata[++i] =  points[2].X();  // FIB31&33
+    d.edata[++i] =  points[2].X();  // FIB33
     d.edata[++i] =  points[2].Z();
 
     d.edata[++i] = (points[2].X() - points[1].X()) / (points[2].Z() - points[1].Z());
 
-    // d.edata[++i] =  points[3].Y();    
-    /*d.edata[i] =  points[1].X();
-    d.edata[++i] =  points[1].Y();
-    d.edata[++i] =  points[1].Z();
-    d.edata[++i] =  (points[1].X() - points[0].X())/(points[1].Z() - points[0].Z());
-    
-            
-    d.edata[++i] =  points[4].X(); 
-    d.edata[++i] =  points[4].Z();
-    d.edata[++i] =  (points[4].X() - points[3].X())/(points[4].Z() - points[3].Z());  
-
-    d.edata[++i] =  points[5].Y();
-    d.edata[++i] =  points[5].Z();*/
-
-    //MDF_params_poq_9pars80Terms180.txt
-   /* d.edata[i]   =  points[1].X(); 
-    d.edata[++i] =  points[1].Y();
-    d.edata[++i] =  points[1].Z();
-    
-    d.edata[++i] =  (points[1].X() - points[0].X())/(points[1].Z() - points[0].Z());
-    
-    d.edata[++i] =  points[4].X(); 
-    d.edata[++i] =  points[4].Z();
-    d.edata[++i] =  (points[4].X() - points[3].X())/(points[4].Z() - points[3].Z());  
-
-    d.edata[++i] =  points[5].Y();
-    d.edata[++i] =  points[5].Z();   */
-
-    //d.edata[++i] = (points[4].X() - points[2].X())/(points[4].Z() - points[2].Z());
-    //d.edata[++i] = (points[3].Y() - points[0].Y())/(points[3].Z() - points[0].Z());
-    //d.edata[++i] =  points[3].Z();
-
     Double_t FlightPath = length[3] - length[1];
-    //cout <<  "\n\nFlight Path: " << FlightPath << endl;
 
     for(i=0; i<nVars; ++i)
     {
@@ -239,8 +321,8 @@ bool ExtractData(Data &d, R3BTPropagator* fPropagator)
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-void Print_MDF_params(TMultiDimFit* mdf)
-{
+void Print_MDF_params(TMultiDimFit* mdf){
+
     cout << "\n\n--Real MDF parameters:" << endl;
     Int_t i, j;
 
@@ -282,8 +364,8 @@ void Print_MDF_params(TMultiDimFit* mdf)
 ////////////////////////////////////////////////////////////////////////////
 
 //Do not change! This matches to R3BMDFWrapper
-void Save_MDF_params(TMultiDimFit* mdf, const char * filename)
-{
+void Save_MDF_params(TMultiDimFit* mdf, const char * filename){
+
     Int_t i, j;
     ofstream outfile;
     outfile.open(filename);
@@ -328,8 +410,8 @@ void Save_MDF_params(TMultiDimFit* mdf, const char * filename)
 ////////////////////////////////////////////////////////////////////////////
 
 //Do not change! This matches to R3BMDFWrapper
-void Save_PCA_params(TPrincipal* pca, const char * filename)
-{
+void Save_PCA_params(TPrincipal* pca, const char * filename){
+
     Int_t i, j;
     ofstream outfile;
     outfile.open(filename);
@@ -360,9 +442,9 @@ void Save_PCA_params(TPrincipal* pca, const char * filename)
 ////////////////////////////////////////////////////////////////////////////
 
 //Main function for MDF fit called from main()
-void run_MDF(Bool_t use_PCA, R3BTPropagator * fPropagator)
-{
-    TApplication* theApp = new TApplication("App", 0, 0);
+void run_MDF(Bool_t use_PCA, R3BTPropagator * fPropagator){
+
+    gROOT->SetBatch(kTRUE);
     TFile* output = new TFile("output/MDF.root", "RECREATE");
 
     // Store the positions of the propagated particles  ////////////////////////////////////////////////////////////////////////////
@@ -399,6 +481,7 @@ void run_MDF(Bool_t use_PCA, R3BTPropagator * fPropagator)
     detectorTree->Branch("FitValue", &fitValue, "value/D");
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // Histograms
     TH2F * h_beam_x_vs_y   = new TH2F("h_beam_x_vs_y","h_beam_x_vs_y",1000,-20,20,1000,-20,20);
     TH2F * h_beam_tx_vs_ty = new TH2F("h_beam_tx_vs_ty","h_beam_tx_vs_ty",1000,0,10,1000,0,10);
 
@@ -407,12 +490,6 @@ void run_MDF(Bool_t use_PCA, R3BTPropagator * fPropagator)
     TH1F * h_residual;
     TH1F * h_track;
     
-    // TH1F * Y_Foot2 = new TH1F("Y_Foot2","Y_Foot2",1000,-10,-10);
-    // TH1F * Z_Foot2 = new TH1F("Z_Foot2","Z_Foot2",1000,-10,-10);
-    // TH1F * X_Foot1 = new TH1F("X_Foot1","X_Foot1",1000,-10,-10);
-    // TH1F * Z_Foot1 = new TH1F("Z_Foot1","Z_Foot1",1000,-10,-10);
-    // TH1F * X_Fiber = new TH1F("X_Fiber","X_Fiber",1000,-10,-10);
-    // TH1F * Z_Fiber = new TH1F("Z_Fiber","Z_Fiber",1000,-10,-10);
     TH1F * TY1 = new TH1F("TY1","TY1",1000,-10,-10);
     TH2F * TX1 = new TH2F("TX1","TX1",1000,-10,-10,1000,-10,-10);
 
@@ -426,6 +503,7 @@ void run_MDF(Bool_t use_PCA, R3BTPropagator * fPropagator)
     Double_t hist_value_min;
     Double_t hist_value_max;
 
+    // Selector of independent variable to fit
     switch(FIT_VALUE)
     {
         case 0 ://PoQ
@@ -688,14 +766,6 @@ void run_MDF(Bool_t use_PCA, R3BTPropagator * fPropagator)
         h_residual->Fill(track_value-data.value);
         h_residual_vs_track->Fill(data.value, data.value-track_value);
         h_track->Fill(data.value);
-        
-        //Fill MDF input data
-        // Y_Foot2->Fill(data.edata[0]);
-        // Z_Foot2->Fill(data.edata[1]);
-        // X_Foot1->Fill(data.edata[2]);
-        // Z_Foot1->Fill(data.edata[3]);
-        // X_Fiber->Fill(data.edata[4]);
-        // Z_Fiber->Fill(data.edata[5]);
 
         TY1->Fill(data.edata[6]);
         TX1->Fill(data.edata[3],data.edata[6]);
@@ -706,54 +776,62 @@ void run_MDF(Bool_t use_PCA, R3BTPropagator * fPropagator)
 
     }
 
-    // Y_Foot2->Write();
-    // Z_Foot2->Write();
-    // X_Foot1->Write();
-    // Z_Foot1->Write();
-    // X_Fiber->Write();
-    // Z_Fiber->Write();
-
     TY1->Write();
     TX1->Write();
 
     detectorTree->Write();
+    h_beam_x_vs_y->Write();
+    h_beam_tx_vs_ty->Write();
     MWPC1_xz->Write();
     Fib32_xz->Write();
     Fib3133_xz->Write();
+    h_lab_xz->Write();
 
-    cout << "\n-- FINISH --" << endl;
+    output->cd();
+    h_track_vs_fit->Write();
+    h_residual->Write();
+    h_residual_vs_track->Write();
+    h_track->Write();
+
     TCanvas * c1 = new TCanvas("c1","c1",1000,1000);
     c1->Divide(2,2);
     c1->cd(1);
-    // h_track_vs_fit->Draw("colz");
+    h_track_vs_fit->Draw("colz");
     c1->cd(2);
-    // h_residual->Draw();
-    h_residual->Fit("gaus");
+    h_residual->Draw();
     c1->cd(3);
-    // h_residual_vs_track->Draw("colz");
+    h_residual_vs_track->Draw("colz");
     c1->cd(4);
-    // h_track->Draw();
+    h_track->Draw();
     c1->Write();
-    //h_lab_xz->Write();
 
     TCanvas * c2 = new TCanvas("c2","c2",1200,900);
     c2->Divide(2,2);
     c2->cd(1);
-    // MWPC1_xz->Draw("colz");
+    h_beam_x_vs_y->Draw("colz");
+    c2->cd(2);
+    h_beam_tx_vs_ty->Draw("colz");
     c2->cd(3);
-    // Fib32_xz->Draw("colz");
+    MWPC1_xz->Draw("colz");
     c2->cd(4);
-    // Fib3133_xz->Draw("colz");
+    Fib32_xz->Draw("colz");
     c2->Write();
+
+    TCanvas * c3 = new TCanvas("c3","c3",1200,900);
+    c3->Divide(1,2);
+    c3->cd(1);
+    Fib3133_xz->Draw("colz");
+    c3->cd(2);
+    h_lab_xz->Draw("colz");
+    c3->Write();
+
+    cout << "\n-- FINISH --" << endl;
 
     output->Write();
     file->Write();
     //output->Close();
     file->Close();
     //delete output;
-    c1->Update();
-    c2->Update();
-    theApp->Run();
     return;
 }
 

@@ -8,7 +8,7 @@ const Double_t TOFD_TIME_OFFSET = 11.74 +  73;                                  
 
 //Nominal detector positions (starting values)
 const Double_t Reference_Current = 1490.0;        //1456.0;   // 3583.81;     //3583.81;// 2641.0;//Current used to calculated MDFs (800 MeV/u Sn)
-const Double_t Actual_Current = 1490.0;      //run 326                                                   // <-------------------
+const Double_t Actual_Current = 1456;      //run 326                                                   // <-------------------
 
 // Distances in cm 
 const Double_t Target_to_GLAD_flange  = 127.9;                                         // <-------------------
@@ -21,8 +21,6 @@ const Double_t fi_32_to_TP   = 385.0;                            // turning poin
 const Double_t fi_31_to_TP   = TP_to_GLAD_exit_flange + 242.5;   // turning point to fib31           // <-------------------
 const Double_t fi_33_to_TP   = TP_to_GLAD_exit_flange + 225.0;   // turning point to fib33           // <-------------------
 const Double_t tofd_to_TP    = TP_to_GLAD_exit_flange + 661.8;   // turning point to fib33           // <-------------------
-
-
 
 const Double_t AngleAl = (-18. ) * TMath::Pi() / 180.;
 const Double_t AngleAl11 = (-18.05  )* TMath::Pi() / 180.;
@@ -125,10 +123,46 @@ void SetMDFOffsets(){
     //                    1.30293, -4.99543, 0.363009, 0.241384, 
     //                   -1.19909, 2.91063, 0.27135, 0.0637986};
 
+    // Constrained 
     double par[14] = {0.62705,  4.91053, 
                      -4.73033,  2.14528, -0.144427,  -0.10782,
                      -4.93043, -1.1072,   0.195477,  -0.193539,
                      -4.99979, -1.43749, -0.0373261, -0.0264633};
+
+
+// double par1 = 4.5357;
+// double par2 = -2.62659;
+
+// double par3 = -0.127484;
+// double par4 = 2.99808;
+// double par5 = 0.0664501;
+// double par6 = 0.160543;
+
+// double par7 = 0.110671;
+// double par8 = -1.05328;
+// double par9 = 0.153397;
+// double par10 = 0.160712;
+
+// double par11 = -0.0697367;
+// double par12 = -1.22957;
+// double par13 = -0.0194854;
+// double par14 = -0.182135;
+// Best delta: 0.000503649
+
+
+// double par[14] = {4.5357, -2.62659,
+//                   -0.127484, 2.99808, 0.0664501, 0.160543,
+//                    0.110671, -1.05328, 0.153397, 0.160712,
+//                   -0.0697367, -1.22957, -0.0194854, -0.182135};
+// // Best delta: 0.000594228
+
+
+// double par[14] = { -4.99592, 4.92425, 
+//                    -0.974042, 6.11133, 0.146641, -0.0208257, 
+//                     3.30711, -6.5677, 0.199675 , 0.19999, 
+//                    -1.15886, 7.33394, -0.0734445, 0.105279};
+// Best delta: 0.000594228
+
 
     double par1 = par[0];      // mwpc x
     double par2 = par[1];      // mwpc z
@@ -152,7 +186,7 @@ void SetMDFOffsets(){
     mwpc1_position.SetXYZ(0,0,targ_to_mwpc1);
     fi32_position.SetXYZ(fi_32_to_TP * TMath::Sin(AngleAl), 0, targ_to_TP + fi_32_to_TP * TMath::Cos(AngleAl));
     fi33_position.SetXYZ(fi_33_to_TP * TMath::Sin(AngleAl), 0, targ_to_TP + fi_33_to_TP * TMath::Cos(AngleAl));
-    fi31_position.SetXYZ(fi_31_to_TP * TMath::Sin(AngleAl), 0, targ_to_TP + fi_31_to_TP * TMath::Cos(AngleAl)); 
+    fi31_position.SetXYZ(fi_31_to_TP * TMath::Sin(AngleAl), 0, targ_to_TP + fi_31_to_TP * TMath::Cos(AngleAl));        // Z position of FIB31 is the Z position of FIB33. Projection of 31 in 33.
 
     mwpc1_angles.SetXYZ(0, 0, 0);
     fi32_angles.SetXYZ(0, AngleAl, 0);
@@ -162,7 +196,7 @@ void SetMDFOffsets(){
     mwpc1_pos_offset.SetXYZ(par1, 0,  par2);
     fi32_pos_offset.SetXYZ( par3, 0,  par4);
     fi33_pos_offset.SetXYZ( par7, 0,  par8);
-    fi31_pos_offset.SetXYZ(par11, 0, par12);
+    fi31_pos_offset.SetXYZ(par11, 0,  par12);    // The z-position of FIB31 is projected into the plane of FIB33
 
     mwpc1_ang_offset.SetXYZ(0, 0, 0);
     fi32_ang_offset.SetXYZ(0,  par5,  par6 );
