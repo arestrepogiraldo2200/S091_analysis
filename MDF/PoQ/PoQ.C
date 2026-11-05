@@ -211,7 +211,8 @@ void MergeHistogramFromFiles(
         legend->SetTextSize(0.032);
 
         for (size_t i = 0; i < hPerFile.size(); ++i) {
-            legend->AddEntry(hPerFile[i], labels[i], "l");
+            TLegendEntry* entry = legend->AddEntry(hPerFile[i], labels[i], "l");
+            entry->SetLineWidth(3);
         }
         legend->Draw();
     }
@@ -253,11 +254,11 @@ void PoQ() {
 
     // Input files to merge 
     const std::vector<TString> inputFiles = {
-        "./10C_opt_mdf.root",
-        "./11C_opt_mdf.root",
-        "./12C_opt_mdf.root",
-        "./13C_opt_mdf.root",
-        "./14C_opt_mdf.root"
+        "./10C_no_opt_mdf.root",
+        "./11C_no_opt_mdf.root",
+        "./12C_no_opt_mdf.root",
+        "./13C_no_opt_mdf.root",
+        "./14C_no_opt_mdf.root"
     };
 
     const Int_t targetNBins = 1000;
@@ -270,11 +271,11 @@ void PoQ() {
     // Edit these values to place one vertical marker per isotope in the same order as inputFiles.
     // Leave the vector empty if you do not want markers.
     const std::vector<Double_t> poqExperimentalValues = {
-        1.527872,
-        1.7092484,
-        1.9902324,
-        2.0717421,
-        2.2532898
+        1.547028,
+        1.7279658,
+        2.0073843,
+        2.0898377,
+        2.2711608
     };
     
     MergeHistogramFromFiles(

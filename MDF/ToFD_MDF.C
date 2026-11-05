@@ -112,7 +112,7 @@ void ToFD_MDF(){
 	Long64_t nevent = chain->GetEntries();
 	cout << "Number of events in the tree: " << nevent << endl;
 
-	for(Long64_t e=0; e < 100000; e++){
+	for(Long64_t e=0; e < nevent; e++){
 
         // Cleaning the vectors 
         hitTOFD->Clear();

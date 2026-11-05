@@ -247,7 +247,6 @@ void Propagation_MDF_training(){
             arc->SetLineWidth(1);
             arc->Draw("same");
             legendLine = arc;
-
             // Fib32 -> Fib31_Fib33 (straight)
             std::array<Double_t, 2> zSeg2 = {allZ[i][1], allZ[i][2]};
             std::array<Double_t, 2> xSeg2 = {allX[i][1], allX[i][2]};
@@ -265,6 +264,11 @@ void Propagation_MDF_training(){
         }
 
         if (firstLinePerFile.find(fileIdx) == firstLinePerFile.end()) {
+            Double_t legendZ[] = {0.0, 1.0};
+            Double_t legendX[] = {0.0, 0.0};
+            TPolyLine* legendLine = new TPolyLine(2, legendZ, legendX);
+            legendLine->SetLineColorAlpha(color, 1.0);
+            legendLine->SetLineWidth(4);
             firstLinePerFile[fileIdx] = legendLine;
         }
 
@@ -417,3 +421,5 @@ void Propagation_MDF_training(){
     cFib3133->Update();
     cFib3133->Draw();
 }
+
+

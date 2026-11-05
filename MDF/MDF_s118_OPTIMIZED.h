@@ -8,7 +8,7 @@ const Double_t TOFD_TIME_OFFSET = 11.74 +  73;                                  
 
 //Nominal detector positions (starting values)
 const Double_t Reference_Current = 1490.0;        //1456.0;   // 3583.81;     //3583.81;// 2641.0;//Current used to calculated MDFs (800 MeV/u Sn)
-const Double_t Actual_Current = 1456;      //run 326                                                   // <-------------------
+const Double_t Actual_Current = 1680;      //run in the elog                                                   // <-------------------
 
 // Distances in cm 
 const Double_t Target_to_GLAD_flange  = 127.9;                                         // <-------------------
@@ -129,25 +129,181 @@ void SetMDFOffsets(){
                      -4.93043, -1.1072,   0.195477,  -0.193539,
                      -4.99979, -1.43749, -0.0373261, -0.0264633};
 
+    // double par[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+
+// double par1 = -4.91813;
+// double par2 = -3.9957;
+// double par3 = -3.34156;
+// double par4 = 5.88089;
+// double par5 = 0.0858184;
+// double par6 = -0.044618;
+// double par7 = 0.486747;
+// double par8 = -6.16558;
+// double par9 = 0.197802;
+// double par10 = -0.191055;
+// double par11 = -2.07377;
+// double par12 = 1.36216;
+// double par13 = -0.0949042;
+// double par14 = -0.176599;
+// Best delta: 0.000276921
+
+
+// double par[14] = {-4.99907, 4.35926, 3.19146, 0.0368386, -0.199856, 0.152864, 1.27532, 7.5909, -0.113164,  0.0139489,  5.82086,  -5.16188,  -0.0216768,  0.148695};
+
 
 // double par1 = 4.5357;
 // double par2 = -2.62659;
-
 // double par3 = -0.127484;
 // double par4 = 2.99808;
 // double par5 = 0.0664501;
 // double par6 = 0.160543;
-
 // double par7 = 0.110671;
 // double par8 = -1.05328;
 // double par9 = 0.153397;
 // double par10 = 0.160712;
-
 // double par11 = -0.0697367;
 // double par12 = -1.22957;
 // double par13 = -0.0194854;
 // double par14 = -0.182135;
 // Best delta: 0.000503649
+
+
+// double par1 = 4.99981;
+// double par2 = -4.99993;
+// double par3 = -2.76319;
+// double par4 = 9.97075;
+// double par5 = -0.0765656;
+// double par6 = 0.00113865;
+// double par7 = 2.67838;
+// double par8 = -9.99799;
+// double par9 = -0.199999;
+// double par10 = 0.2;
+// double par11 = -0.23334;
+// double par12 = -2.0938;
+// double par13 = -0.173841;
+// double par14 = 0.173558;
+// Best delta: 0.000696736
+
+
+// double par2 = 4.46562;
+// double par3 = -5.10314;
+// double par4 = 5.34156;
+// double par5 = -0.127001;
+// double par6 = -0.00432999;
+// double par7 = -7.67848;
+// double par8 = 7.15149;
+// double par9 = 0.00707034;
+// double par10 = 0.0797821;
+// double par11 = -4.69461;
+// double par12 = -3.0588;
+// double par13 = -0.194944;
+// double par14 = -0.103126;
+// Best delta: 0.000894259
+
+
+// double par1 = -4.97561;
+// double par2 = -4.79282;
+// double par3 = -1.82184;
+// double par4 = 6.6556;
+// double par5 = 0.123804;
+// double par6 = 0.160129;
+// double par7 = 0.583929;
+// double par8 = -0.313259;
+// double par9 = 0.199259;
+// double par10 = -0.188303;
+// double par11 = 3.75975;
+// double par12 = -9.41955;
+// double par13 = 0.186895;
+// double par14 = 0.199992;
+// Best delta: 0.000694976
+
+
+// double par1 = -3.67014;
+// double par2 = -4.93839;
+// double par3 = 5.53115;
+// double par4 = -4.4365;
+// double par5 = -0.197466;
+// double par6 = 0.198552;
+// double par7 = 1.82282;
+// double par8 = 9.54382;
+// double par9 = 0.0776748;
+// double par10 = 0.158703;
+// double par11 = 7.82269;
+// double par12 = -7.93193;
+// double par13 = 0.0817393;
+// double par14 = -0.0673576;
+// Best delta: 0.000827139
+
+
+// double par1 = -4.99592;
+// double par2 = 4.92425;
+// double par3 = -0.974042;
+// double par4 = 6.11133;
+// double par5 = 0.146641;
+// double par6 = -0.0208257;
+// double par7 = 3.30711;
+// double par8 = -6.5677;
+// double par9 = 0.199675;
+// double par10 = 0.19999;
+// double par11 = -1.15886;
+// double par12 = 7.33394;
+// double par13 = -0.0734445;
+// double par14 = 0.105279;
+// Best delta: 0.000594228
+
+
+// double par1 = 4.5357;
+// double par2 = -2.62659;
+// double par3 = -0.127484;
+// double par4 = 2.99808;
+// double par5 = 0.0664501;
+// double par6 = 0.160543;
+// double par7 = 0.110671;
+// double par8 = -1.05328;
+// double par9 = 0.153397;
+// double par10 = 0.160712;
+// double par11 = -0.0697367;
+// double par12 = -1.22957;
+// double par13 = -0.0194854;
+// double par14 = -0.182135;
+// Best delta: 0.000503649
+
+
+// double par1 = -4.99795;
+// double par2 = 4.99985;
+// double par3 = 3.08026;
+// double par4 = -0.579244;
+// double par5 = 0.19805;
+// double par6 = 0.113503;
+// double par7 = 5.24861;
+// double par8 = -6.04684;
+// double par9 = 0.159874;
+// double par10 = 0.167327;
+// double par11 = 3.30694;
+// double par12 = 0.865978;
+// double par13 = 0.0745513;
+// double par14 = -0.104907;
+// Best delta: 0.000710895
+
+
+
+// double par1 = -4.99907;
+// double par2 = 4.35926;
+// double par3 = 3.19146;
+// double par4 = 0.0368386;
+// double par5 = -0.199856;
+// double par6 = 0.152864;
+// double par7 = 1.27532;
+// double par8 = 7.5909;
+// double par9 = -0.113164;
+// double par10 = 0.0139489;
+// double par11 = 5.82086;
+// double par12 = -5.16188;
+// double par13 = -0.0216768;
+// double par14 = 0.148695;
+// Best delta: 0.000158228
+
 
 
 // double par[14] = {4.5357, -2.62659,

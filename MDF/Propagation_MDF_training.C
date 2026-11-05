@@ -140,7 +140,7 @@ void Propagation_MDF_training(){
     Long64_t nEntries = chain->GetEntries();
 
     // Maximum number of points in the trajectories
-    const Int_t maxPointsPerFile = 2000;                             // <----------------------------
+    const Int_t maxPointsPerFile = 1000;                             // <----------------------------
 
     std::vector<std::array<Double_t, 3>> allZ;
     std::vector<std::array<Double_t, 3>> allX;
@@ -236,35 +236,36 @@ void Propagation_MDF_training(){
         const Int_t fileIdx = allFileIdx[i];
         const Int_t color = fileColors[fileIdx % nFileColors];
 
-        TPolyLine* legendLine = nullptr;
-
         if (kUseArcMwpc1ToFib32) {
             // MWPC1 -> Fib32 (arc)
             std::vector<Double_t> zArc, xArc;
             ComputeArcPoints(allZ[i][0], allX[i][0], allZ[i][1], allX[i][1], kArcSagitta, kArcPoints, zArc, xArc);
             TPolyLine* arc = new TPolyLine(zArc.size(), zArc.data(), xArc.data());
             arc->SetLineColorAlpha(color, 0.05);
-            arc->SetLineWidth(1);
+            arc->SetLineWidth(2);
             arc->Draw("same");
-            legendLine = arc;
 
             // Fib32 -> Fib31_Fib33 (straight)
             std::array<Double_t, 2> zSeg2 = {allZ[i][1], allZ[i][2]};
             std::array<Double_t, 2> xSeg2 = {allX[i][1], allX[i][2]};
             TPolyLine* seg2 = new TPolyLine(2, zSeg2.data(), xSeg2.data());
             seg2->SetLineColorAlpha(color, 0.05);
-            seg2->SetLineWidth(1);
+            seg2->SetLineWidth(2);
             seg2->Draw("same");
         } else {
             // Draws a line between the x-z coordinates of the detectors
             TPolyLine* line = new TPolyLine(3, allZ[i].data(), allX[i].data());
             line->SetLineColorAlpha(color, 0.05);
-            line->SetLineWidth(1);
+            line->SetLineWidth(2);
             line->Draw("same");
-            legendLine = line;
         }
 
         if (firstLinePerFile.find(fileIdx) == firstLinePerFile.end()) {
+            Double_t legendZ[] = {0.0, 1.0};
+            Double_t legendX[] = {0.0, 0.0};
+            TPolyLine* legendLine = new TPolyLine(2, legendZ, legendX);
+            legendLine->SetLineColorAlpha(color, 1.0);
+            legendLine->SetLineWidth(4);
             firstLinePerFile[fileIdx] = legendLine;
         }
 
@@ -406,6 +407,7 @@ void Propagation_MDF_training(){
     fib3133Legend->Draw();
 
     c2->Update();
+    c2->SaveAs("Fragments_trajectories.pdf");
     c2->Draw();
 
     cMwpc1->Update();

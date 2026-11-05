@@ -25,11 +25,11 @@ const Double_t fi_33_to_TP   = TP_to_GLAD_exit_flange + 225.0;   // turning poin
 const Double_t tofd_to_TP    = TP_to_GLAD_exit_flange + 661.8;   // turning point to fib33           // <-------------------
 
 // PoQ reference values ======================================================================================
-double Reference_PoQ_10 = 1.527872;
-double Reference_PoQ_11 = 1.7092484;
-double Reference_PoQ_12 = 1.9902324;
-double Reference_PoQ_13 = 2.0717421;
-double Reference_PoQ_14 = 2.2532898;
+double Reference_PoQ_10 = 1.547028;
+double Reference_PoQ_11 = 1.7279658;
+double Reference_PoQ_12 = 2.0073843;
+double Reference_PoQ_13 = 2.0898377;
+double Reference_PoQ_14 = 2.2711608;
 
 // Transform point ======================================================================================
 void TransformPoint(TVector3& point, TVector3 rot, TVector3 trans)

@@ -8,7 +8,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Definitions of strings and histograms
-char fname1[200], fname2[200], fname3[200], fname4[200], fname5[200], fname6[200], fname7[200], fname8[200], fname9[200], fname10[200], fname11[200], fname12[200], fname13[200];
+char fname1[200], fname2[200], fname3[200], fname4[200], fname5[200], fname6[200], fname7[200], fname8[200], fname9[200], fname10[200], fname11[200], fname12[200], fname13[200], fname14[200], fname15[200], fname16[200], fname17[200], fname18[200], fname19[200], fname20[200], fname21[200], fname22[200];
+
 int tpat;
 // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
 // TString MDF_PoQ_file = "./10C_MDF_params.txt";
@@ -17,9 +18,11 @@ int tpat;
 // TString MDF_PoQ_file = "./13C_MDF_params.txt";
 // TString MDF_PoQ_file = "./14C_MDF_params.txt";
 TString MDF_PoQ_file = "./MDF_params.txt";
+TString MDF_PoQ_file_path = "./MDF_params_path.txt";
 // TString MDF_PoQ_file = "./MDF_PoQ_1456A_20240221.txt";
 
-const TString isotopeTag = "12C274_opt";
+const TString isotopeTag = "14C_opt";
+const TString incommingC = "14C";
 const TString outputRootDir = Form("%s_mdf", isotopeTag.Data());
 const TString outputPngDir = Form("%s_mdf", isotopeTag.Data());
 const TString detectorLabFile = Form("%s/%s_lab.root", outputRootDir.Data(), isotopeTag.Data());
@@ -28,10 +31,10 @@ const TString outputRootFile = Form("%s/%s_mdf.root", outputRootDir.Data(), isot
 // Constant beta. Calculated with lise++ from the Brho of FRS
 // const double beta_b  = 0.6832911;   // 10C
 // const double beta_b  = 0.7212162;   // 11C
-// const double beta_b  = 0.7409629;   // 12C
+const double beta_b  = 0.7409629;   // 12C
 // const double beta_b  = 0.7813805;   // 13C
 // const double beta_b  = 0.8052148;   // 14C
-// const double gamma_b = 1.0/std::sqrt(1.0-beta_b*beta_b);
+const double gamma_b = 1.0/std::sqrt(1.0-beta_b*beta_b);
 
 const double factor_b  = 3.33555703802535; 
 const double mu = 0.93149410372;
@@ -79,6 +82,9 @@ TH2D* h_FI33_FI31_combined_FI32_X;
 TH1D* h_PoQ;
 // A/Q histogram
 TH1D* h_AoQ;
+
+// ToF
+TH1D* h_ToF;
 
 // Correlated area
 TH2D* h_FIB31_FIB33_combined_FIB32_area;
@@ -450,11 +456,11 @@ void MDF_s118_OPTIMIZED(){
     h_PoQvsQ->GetXaxis()->SetTitle("PoQ [GeV/c]");
     h_PoQvsQ->GetYaxis()->SetTitle("Q");
 
-    h_Brho = new TH2D("Brho FRS vs MDF","Brho FRS vs MDF", 3000, 5, 8, 3000, 5, 8);
+    h_Brho = new TH2D("Brho FRS vs MDF","Brho FRS vs MDF", 3000, 6.4, 6.5, 3000, 5, 8);
     h_Brho->GetXaxis()->SetTitle("FRS Brho [Tm]");
     h_Brho->GetYaxis()->SetTitle("MDF Brho [Tm]");
 
-    h_Beta = new TH2D("Beta FRS vs MDF","Beta FRS vs MDF", 3000, 0, 1, 3000, 5, 8);
+    h_Beta = new TH2D("Beta FRS vs MDF","Beta FRS vs MDF", 3000, 0.72, 0.723, 3000, 5, 8);
     h_Beta->GetXaxis()->SetTitle("FRS Beta [Tm]");
     h_Beta->GetYaxis()->SetTitle("MDF Brho [Tm]");
 
@@ -473,6 +479,10 @@ void MDF_s118_OPTIMIZED(){
     h_AoZvsZ_FRS_cut = new TH2D("A/Q vs Q incomming cut","A/Q vs Q incomming cut", 5000, 0, 6, 3000, 0, 8);
     h_AoZvsZ_FRS_cut->GetXaxis()->SetTitle("AoQ");
     h_AoZvsZ_FRS_cut->GetYaxis()->SetTitle("Q");
+
+    // ToF
+    h_ToF = new TH1D("Time of flight ToFD","Time of flight ToFD", 1000, 0, 1000);
+    h_ToF->GetXaxis()->SetTitle("ToF (ns)");
 
     // ToFD planes charges control
     int max_charge = 8;
@@ -511,6 +521,7 @@ void MDF_s118_OPTIMIZED(){
     TChain* chain = new TChain("evt"); 
     //sprintf(fname1,"./merged_MDF_runs.root"); 
     // sprintf(fname1,"./merged_MDF_runs_v3.root");
+    // sprintf(fname1,"./main0280_0001_unpacked_NEW_TOFD.root");
 
     // sprintf(fname1,"./main0326_0001_unpacked_MDF_v3.root");        // 10C
     // sprintf(fname1,"./main0321_0001_unpacked_MDF_v3.root");        // 11C
@@ -524,19 +535,44 @@ void MDF_s118_OPTIMIZED(){
     // sprintf(fname1,"./main0252_0001_unpacked_MDF_2.root");
     // sprintf(fname1,"./main0280_0001_unpacked_los.root");
 
-    sprintf(fname1,"./main0274_0001_unpacked_los.root");
-    sprintf(fname2,"./main0275_0001_unpacked_los.root");
-    sprintf(fname3,"./main0276_0001_unpacked_los.root");
-    sprintf(fname4,"./main0277_0001_unpacked_los.root");
-    sprintf(fname5,"./main0278_0001_unpacked_los.root");
-    sprintf(fname6,"./main0279_0001_unpacked_los.root");
-    sprintf(fname7,"./main0280_0001_unpacked_los.root");
-    sprintf(fname8,"./main0281_0001_unpacked_los.root");
-    sprintf(fname9,"./main0282_0001_unpacked_los.root");
-    sprintf(fname10,"./main0283_0001_unpacked_los.root");
-    sprintf(fname11,"./main0284_0001_unpacked_los.root");
-    sprintf(fname12,"./main0285_0001_unpacked_los.root");
-    sprintf(fname13,"./main0286_0001_unpacked_los.root");
+    // sprintf(fname1,"./main0274_0001_unpacked_los.root");
+    // sprintf(fname2,"./main0275_0001_unpacked_los.root");
+    // sprintf(fname3,"./main0276_0001_unpacked_los.root");
+    // sprintf(fname4,"./main0277_0001_unpacked_los.root");
+    // sprintf(fname5,"./main0278_0001_unpacked_los.root");
+    // sprintf(fname6,"./main0279_0001_unpacked_los.root");
+    // sprintf(fname7,"./main0280_0001_unpacked_los.root");
+    // sprintf(fname8,"./main0281_0001_unpacked_los.root");
+    // sprintf(fname9,"./main0282_0001_unpacked_los.root");
+    // sprintf(fname10,"./main0283_0001_unpacked_los.root");
+    // sprintf(fname11,"./main0284_0001_unpacked_los.root");
+    // sprintf(fname12,"./main0285_0001_unpacked_los.root");
+    // sprintf(fname13,"./main0286_0001_unpacked_los.root");
+
+    // sprintf(fname1,"./main0173_0001_unpacked_los.root");
+    // sprintf(fname2,"./main0174_0001_unpacked_los.root");
+    // sprintf(fname3,"./main0175_0001_unpacked_los.root");
+    // sprintf(fname4,"./main0176_0001_unpacked_los.root");
+    // sprintf(fname5,"./main0177_0001_unpacked_los.root");
+    // sprintf(fname6,"./main0178_0001_unpacked_los.root");
+    // sprintf(fname7,"./main0179_0001_unpacked_los.root");
+    // sprintf(fname8,"./main0180_0001_unpacked_los.root");
+    // sprintf(fname9,"./main0181_0001_unpacked_los.root");
+    // sprintf(fname10,"./main0182_0001_unpacked_los.root");
+    // sprintf(fname11,"./main0183_0001_unpacked_los.root");
+    // sprintf(fname12,"./main0184_0001_unpacked_los.root");
+    // sprintf(fname13,"./main0185_0001_unpacked_los.root");
+    // sprintf(fname14,"./main0186_0001_unpacked_los.root");
+    // sprintf(fname15,"./main0187_0001_unpacked_los.root");
+    // sprintf(fname16,"./main0188_0001_unpacked_los.root");
+    // sprintf(fname17,"./main0189_0001_unpacked_los.root");
+    // sprintf(fname18,"./main0190_0001_unpacked_los.root");
+    // sprintf(fname19,"./main0191_0001_unpacked_los.root");
+    // sprintf(fname20,"./main0192_0001_unpacked_los.root");
+    // sprintf(fname21,"./main0193_0001_unpacked_los.root");
+    // sprintf(fname22,"./main0194_0001_unpacked_los.root");
+
+    sprintf(fname1,"./main0260_0001_unpacked_los.root");
 
     // Cut in FRS incomming beam
     FRS_CUT = true;
@@ -555,8 +591,17 @@ void MDF_s118_OPTIMIZED(){
     // chain->Add(fname11); 
     // chain->Add(fname12); 
     // chain->Add(fname13); 
+    // chain->Add(fname14); 
+    // chain->Add(fname15); 
+    // chain->Add(fname16); 
+    // chain->Add(fname17); 
+    // chain->Add(fname18); 
+    // chain->Add(fname19); 
+    // chain->Add(fname20); 
+    // chain->Add(fname21); 
+    // chain->Add(fname22); 
 
-    double MWPC_avrg, MWPC_avrg1, MWPC_avrg2, MWPC_avrg3, MWPC_avrg4, MWPC_avrg5, MWPC_avrg6, MWPC_avrg7, MWPC_avrg8, MWPC_avrg9, MWPC_avrg10, MWPC_avrg11, MWPC_avrg12, MWPC_avrg13;
+    double MWPC_avrg, MWPC_avrg1, MWPC_avrg2, MWPC_avrg3, MWPC_avrg4, MWPC_avrg5, MWPC_avrg6, MWPC_avrg7, MWPC_avrg8, MWPC_avrg9, MWPC_avrg10, MWPC_avrg11, MWPC_avrg12, MWPC_avrg13, MWPC_avrg14, MWPC_avrg15, MWPC_avrg16, MWPC_avrg17, MWPC_avrg18, MWPC_avrg19, MWPC_avrg20, MWPC_avrg21, MWPC_avrg22;
     
     MWPC_avrg1 = averageMWPC1(fname1);
     // MWPC_avrg2 = averageMWPC1(fname2);
@@ -571,8 +616,20 @@ void MDF_s118_OPTIMIZED(){
     // MWPC_avrg11 = averageMWPC1(fname11);
     // MWPC_avrg12 = averageMWPC1(fname12);
     // MWPC_avrg13 = averageMWPC1(fname13);
+    // MWPC_avrg14 = averageMWPC1(fname14);
+    // MWPC_avrg15 = averageMWPC1(fname15);
+    // MWPC_avrg16 = averageMWPC1(fname16);
+    // MWPC_avrg17 = averageMWPC1(fname17);
+    // MWPC_avrg18 = averageMWPC1(fname18);
+    // MWPC_avrg19 = averageMWPC1(fname19);
+    // MWPC_avrg20 = averageMWPC1(fname20);
+    // MWPC_avrg21 = averageMWPC1(fname21);
+    // MWPC_avrg22 = averageMWPC1(fname22);
 
     // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5 + MWPC_avrg6 + MWPC_avrg7 + MWPC_avrg8 + MWPC_avrg9 + MWPC_avrg10 + MWPC_avrg11 + MWPC_avrg12 + MWPC_avrg13)/13;
+    // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5 + MWPC_avrg6 + MWPC_avrg7 + MWPC_avrg8 + MWPC_avrg9 + MWPC_avrg10 + MWPC_avrg11 + MWPC_avrg12 + MWPC_avrg13 + MWPC_avrg14 + MWPC_avrg15 +  MWPC_avrg16 + MWPC_avrg17 + MWPC_avrg18 + MWPC_avrg19 + MWPC_avrg20 + MWPC_avrg21 + MWPC_avrg22)/22;
+    // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5 + MWPC_avrg6 + MWPC_avrg7 + MWPC_avrg8 + MWPC_avrg9 + MWPC_avrg10 + MWPC_avrg11)/11;
+    // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5)/5;
     MWPC_avrg = MWPC_avrg1;
 
     // Load the branches with data as TClonesArrays 
@@ -762,11 +819,35 @@ void MDF_s118_OPTIMIZED(){
 
                     h_AoZvsZ_FRS->Fill(AoZ, Z);
 
-                    // Cut on Z and A/Z
-                    double Z0   = 5.9343; 
-                    double AoZ0 = 2.00072; 
-                    double AoZ_semimajor = 3*0.00125541;
-                    double Z_semimajor = 3*0.107835; 
+                    double Z0; 
+                    double AoZ0; 
+                    double AoZ_semimajor;
+                    double Z_semimajor; 
+
+                    if (incommingC== "10C") {
+                        Z0   = 5.9343; 
+                        AoZ0 = 2.00072; 
+                        AoZ_semimajor = 3*0.00125541;
+                        Z_semimajor = 3*0.107835;
+                    }
+                    else if (incommingC== "12C") { 
+                        Z0   = 5.9343; 
+                        AoZ0 = 2.00072; 
+                        AoZ_semimajor = 3*0.00125541;
+                        Z_semimajor = 3*0.107835; 
+                    }
+                    else if (incommingC== "14C") { 
+                        Z0   = 6.00078; 
+                        AoZ0 = 2.34058; 
+                        AoZ_semimajor = 3*0.00108077;
+                        Z_semimajor = 3*0.108631; 
+                    }
+                    else if (incommingC== "16C") { 
+                        Z0   = 5.9343; 
+                        AoZ0 = 2.00072; 
+                        AoZ_semimajor = 3*0.00125541;
+                        Z_semimajor = 3*0.107835; 
+                    }
 
                     Z0_plot = Z0; 
                     AoZ0_plot = AoZ0; 
@@ -792,15 +873,20 @@ void MDF_s118_OPTIMIZED(){
             hitTofd = new R3BTofdHitData*[TofdHitPerEvent];
             double totalEloss = 0.;
 
+            // Checks on charge
+            double minCharge = 200, maxCharge = 0;
+
             for(int p = 0; p < TofdHitPerEvent; p++){
 
                 hitTofd[p] = (R3BTofdHitData*)hitTOFD->At(p);
 
                 int TOFD_Id  = hitTofd[p]->GetDetId();     
-                int bar      = hitTofd[p]->GetBarId();   
+                int bar      = hitTofd[p]->GetBarId();
+                double ToF = hitTofd[p]->GetTof();
                 double Eloss = hitTofd[p]->GetEloss();
                 double Eloss_new;
 
+                // Recalibrations
                 if ( recalib_tofd_c0[TOFD_Id-1][bar-1]==0 && recalib_tofd_c1[TOFD_Id-1][bar-1]==0 && recalib_tofd_c2[TOFD_Id-1][bar-1]==0 ){
                     Eloss_new = Eloss;
                 } 
@@ -808,10 +894,15 @@ void MDF_s118_OPTIMIZED(){
                     Eloss_new = recalib_tofd_c0[TOFD_Id-1][bar-1] + recalib_tofd_c1[TOFD_Id-1][bar-1]*Eloss + recalib_tofd_c2[TOFD_Id-1][bar-1]*Eloss*Eloss;
                 }
 
+                // All charges should close to each other and no fragmentation happens in ToFD
+                if (Eloss_new < minCharge) { minCharge = Eloss_new; }
+                if (Eloss_new > maxCharge) { maxCharge = Eloss_new; }
+
                 totalEloss += Eloss_new;
 
                 double TOFD_X = hitTofd[p]->GetX();
                 h_TOFD_X->Fill(TOFD_X);
+                h_ToF->Fill(ToF);
 
                 // Histograms per plane per bar
                 switch (TOFD_Id) {
@@ -831,13 +922,19 @@ void MDF_s118_OPTIMIZED(){
             }
 
             // If the average charge is charge 6
-            if( totalEloss / TofdHitPerEvent > 5.5 && totalEloss / TofdHitPerEvent < 6.5) {                   
-                b_tofdq = true;                           
-            }
-
             averageEloss = totalEloss / TofdHitPerEvent;
-            b_tofdq = true;                                // To evaluate all ions 
 
+            // Evaluates the charge difference between all four hits 
+            if (maxCharge - minCharge > 0.7){
+                b_tofdq = false;                              
+            } else {
+
+                if( averageEloss > 5.5 && averageEloss < 6.5) {                   
+                    b_tofdq = true;                           
+                }
+
+                b_tofdq = true;                    // Uncomment to evaluate all ions                            
+            }
             /////////////////////////////////////////////////////////////////////////////////////////
 
             if ( b_tofdq == true && b_AoZ_vs_Z == true){
@@ -985,7 +1082,6 @@ void MDF_s118_OPTIMIZED(){
             // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
 
             // Setting the detector hit positions 
-            // if( MWPC1_hit.size()>0 && MWPC2_corr_hit.size()>0 && FI32_corr_hit.size()>0 && (FI33_corr_hit.size()>0 || FI31_corr_hit.size()>0) ){
             if( MWPC1_hit.size()>0 && FI32_corr_hit.size()>0 && (FI33_corr_hit.size()>0 || FI31_corr_hit.size()>0) ){
 
                 // This loop appends a single hit in FI32 and FI31 and then considers FI32 and FI33 separately
@@ -1086,18 +1182,31 @@ void MDF_s118_OPTIMIZED(){
                         // double AoQ_cons = t.PoQ_mdf*(1)/(gamma_b*beta_b*mu);
                         // h_AoQ->Fill(AoQ_cons);
                         // h_AoQvsQ->Fill(AoQ_cons, averageEloss);
-
                     }    
                 }               
             }
-            
             // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
+
         }          // ----> Hits events condition
     }              // ----> Loop over events
 
     if (FRS_CUT){
+
         // Fit a Gaussian
-        auto fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 1.99, 2.01, 5.5, 6.5);
+        Gaussian2DFitResult fit;
+
+        if (incommingC== "10C") {
+            fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 1.99, 2.01, 5.5, 6.5);                
+        }
+        else if (incommingC== "12C") { 
+            fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 1.99, 2.01, 5.5, 6.5);
+        }
+        else if (incommingC== "14C") { 
+            fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 2.334, 2.346, 5.5, 6.5);
+        }
+        else if (incommingC== "16C") { 
+            fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 1.99, 2.01, 5.5, 6.5);
+        }
 
         if (fit.ok) {
             std::cout << "Amplitude = " << fit.amplitude << std::endl;
@@ -1212,6 +1321,10 @@ void MDF_s118_OPTIMIZED(){
     TCanvas* c_bar_Eloss_rec3 = new TCanvas();
     c_bar_Eloss_rec3->cd(1);
     bar_Eloss_rec[3]->Draw("colz");
+
+    TCanvas* c_ToF  = new TCanvas();
+    c_ToF->cd(1);
+    h_ToF->Draw("hist");
 
     ///////////////////////////////////////////////////////////////////
 
@@ -1357,6 +1470,7 @@ void MDF_s118_OPTIMIZED(){
     bar_Eloss_rec[3]->Write();
     h_Brho->Write();
     h_Beta->Write();
+    h_ToF->Write();
 
     rootFile->Close();
 

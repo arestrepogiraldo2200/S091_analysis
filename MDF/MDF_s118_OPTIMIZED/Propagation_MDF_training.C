@@ -247,7 +247,6 @@ void Propagation_MDF_training(){
             arc->SetLineWidth(1);
             arc->Draw("same");
             legendLine = arc;
-
             // Fib32 -> Fib31_Fib33 (straight)
             std::array<Double_t, 2> zSeg2 = {allZ[i][1], allZ[i][2]};
             std::array<Double_t, 2> xSeg2 = {allX[i][1], allX[i][2]};

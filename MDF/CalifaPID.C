@@ -3,7 +3,6 @@
 #include <TF1.h>
 
 TH2D* h_Califa_Components;
-TH2D* h_Califa_Components_cut;
 TH1D* h_Califa_hits;
 TH1D* h_Califa_Ns;
 TH1D* h_Califa_Nf;
@@ -16,8 +15,62 @@ TH2D* h_CALIFATHETA;
 TH1D* h_CALIFATHETASUM;
 TH2D* h_CALIFAPHI;
 
+#include "TH2D.h"
+#include "TH1D.h"
+#include "TSpectrum.h"
+#include <vector>
+#include <algorithm>
+
+// Function to slice the histogram
+void SlicePeaks(TH2D* h2, std::vector<double>& xs, std::vector<double>& ys, int binsPerSlice = 100, double xmin = 0, double xmax = 900000, double minEntries = 1){
+    
+    xs.clear(); ys.clear();
+    int b0 = h2->GetXaxis()->FindBin(xmin), b1 = h2->GetXaxis()->FindBin(xmax);
+
+    for (int ix = b0; ix + binsPerSlice - 1 <= b1; ix += binsPerSlice){
+        int ixe = ix + binsPerSlice - 1;
+        double xc = 0.5 * (h2->GetXaxis()->GetBinLowEdge(ix) + h2->GetXaxis()->GetBinUpEdge(ixe));
+
+        TH1D* p = h2->ProjectionY(Form("slice_%d", ix), ix, ixe);   // Vertical slice
+        if (p->GetEntries() < minEntries) { delete p; continue; }
+        p->Rebin(2);
+
+        TSpectrum s(5);
+        int n = s.Search(p, 2, "nodraw", 0.1);                     // sigma, option, threshold (fraction of max)
+        if (n > 0) {
+            double* px = s.GetPositionX();
+            xs.push_back(xc);
+            ys.push_back(*std::max_element(px, px + n));          // peak with highest Y
+
+            //cout << "Peak found" << endl;
+            cout << xc << " " << *std::max_element(px, px + n) << endl; 
+
+        } else {
+
+            //cout << "No peak found!!!!!!!!!!!!!" << endl;
+            double pk = p->GetBinCenter(p->GetMaximumBin());
+            double rms = p->GetRMS();
+
+            if (rms <= 0) rms = p->GetBinWidth(1) * 5;
+            TF1 g("g_slice", "gaus", pk - 2 * rms, pk + 2 * rms);
+            g.SetParameters(p->GetMaximum(), pk, rms);
+            int status = p->Fit(&g, "QN0R");
+            double mean = g.GetParameter(1);
+
+            xs.push_back(xc);
+            // Last resort: if the fit failed, use the mean of all entries in the slice
+            double yval = (status == 0 && std::isfinite(mean)) ? mean : p->GetMean();
+            ys.push_back(yval);
+
+            cout << xc << " " << yval << endl; 
+        }
+        delete p;  
+    }
+}
+
 // When getting a specific crystal
 int target_crystal = 4272; 
+// int target_crystal = 4300; 
 // int target_crystal = -1; 
 
 char fname1[200], fname2[200], fname3[200], fname4[200], fname5[200], fname6[200], fname7[200], fname8[200], fname9[200], fname10[200], fname11[200], fname12[200], fname13[200];
@@ -29,10 +82,6 @@ void CalifaPID(){
     h_Califa_Components = new TH2D("Califa fast and slow components","Califa fast and slow components",5000,-50000,900000, 200,-0.5,1);
     h_Califa_Components->GetXaxis()->SetTitle("Nf+Ns");
     h_Califa_Components->GetYaxis()->SetTitle("Nf/(Nf+Ns)");
-
-    h_Califa_Components_cut = new TH2D("Califa fast and slow components cut","Califa fast and slow components cut",5000,-50000,900000, 200,-0.5,1);
-    h_Califa_Components_cut->GetXaxis()->SetTitle("Nf+Ns");
-    h_Califa_Components_cut->GetYaxis()->SetTitle("Nf/(Nf+Ns)");
 
     h_Califa_hits = new TH1D("Hits per event CALIFA", "Hits per event CALIFA",20, 0, 20);
     h_Califa_hits->GetXaxis()->SetTitle("Hits per event CALIFA");
@@ -87,20 +136,22 @@ void CalifaPID(){
     sprintf(fname12,"./main0285_0001_unpacked_los.root");
     sprintf(fname13,"./main0286_0001_unpacked_los.root");
 
+    // sprintf(fname1,"./main0126_0001_unpacked_lo.root");
+
     chain->Reset();
     chain->Add(fname1); 
-    // chain->Add(fname2); 
-    // chain->Add(fname3); 
-    // chain->Add(fname4); 
-    // chain->Add(fname5); 
-    // chain->Add(fname6); 
-    // chain->Add(fname7); 
-    // chain->Add(fname8); 
-    // chain->Add(fname9); 
-    // chain->Add(fname10); 
-    // chain->Add(fname11); 
-    // chain->Add(fname12); 
-    // chain->Add(fname13); 
+    chain->Add(fname2); 
+    chain->Add(fname3); 
+    chain->Add(fname4); 
+    chain->Add(fname5); 
+    chain->Add(fname6); 
+    chain->Add(fname7); 
+    chain->Add(fname8); 
+    chain->Add(fname9); 
+    chain->Add(fname10); 
+    chain->Add(fname11); 
+    chain->Add(fname12); 
+    chain->Add(fname13); 
 
     /////////////////////////////////////////////////////////////////////////////////////////
     // Load the branches with data as TClonesArrays 
@@ -139,13 +190,17 @@ void CalifaPID(){
         clusterCalifa = new R3BCalifaClusterData*[CalifaHitPerEvent];
         caldataCalifa = new R3BCalifaCrystalCalData*[CalifaCalPerEvent];
 
+        // Tolerances for kinematical conditions
+        double tolerance_theta = 0.2;
+        double tolerance_phi = 0.2;
+
         // ----------------------------------------------------------------------------------------------------
         if (CalifaHitPerEvent == 2){                                         // Condition on two hits in Califa
 
-            bool califaL=false;
-            bool califaR=false;
-            double thetaTL, thetaTR, phiTR, phiTL, EL, ER;
-            double phi1 = 0., phi2 =0., theta1=0., theta2=0.;
+            bool califaL = false;
+            bool califaR = false;
+            double thetaTL = 0, thetaTR = 0, phiTR = 0, phiTL = 0, EL = 0, ER = 0, NfL = 0, NfR = 0, NsL = 0, NsR = 0;
+            int CCL = 0, CCR = 0;
             double thetasum_plane = 0;
 
             for(int p = 0; p < CalifaHitPerEvent; p++){
@@ -156,165 +211,113 @@ void CalifaPID(){
                 double Nf = clusterCalifa[p]->GetNf();
                 double Ns = clusterCalifa[p]->GetNs();
                 int CC = clusterCalifa[p]->GetMotherCrystal();
-
                 double theta = clusterCalifa[p]->GetTheta();
                 double phi   = clusterCalifa[p]->GetPhi();
 
-                if(p==0){
-                    phi1 = phi;
-                    theta1 = theta; 
-                }
-                if(p==1){
-                    phi2 = phi;
-                    theta2 = theta;
+                // ----------------------------------------------------------------------------------------------------
+                if ( (phi < 1.5 && phi > -1.5) ){
+
+                    califaL = true;
+                    thetaTL = theta;
+                    thetasum_plane += thetaTL;
+                    phiTL = phi;
+                    EL = E;
+                    CCL = CC;
+                    NfL = Nf;
+                    NsL = Ns;
                 }
 
                 // ----------------------------------------------------------------------------------------------------
-                if ( E > 20000 ){
+                if ( (phi>1.5 || phi<-1.5) ){ 
+                                                    
+                    califaR = true;
+                    thetaTR = theta;
+                    thetasum_plane += thetaTR;
+                    phiTR = phi;
+                    ER = E;
+                    CCR = CC;
+                    NfR = Nf;
+                    NsR = Ns;
+                }
+            }
 
-                    double tolerance_theta = 0.2;
-                    double tolerance_phi = 0.2;
+            // ----------------------------------------------------------------------------------------------------
+            // Conditionals on energy and kinematics
 
-                    // ----------------------------------------------------------------------------------------------------
-                    if ( (phi < 1.5 && phi > -1.5) && califaL == false){
+            if ( califaR == true && califaL == true){
+                if ( EL > 20000 && ER > 20000){
+                    if (  abs( abs(phiTL) + abs(phiTR) - 3.1415926535)  < tolerance_phi) {
+                        if (  abs( abs(thetaTL) + abs(thetaTR) - 1.41372)  < tolerance_theta) {
 
-                        califaL = true;
-                        thetaTL = theta;
-                        thetasum_plane += thetaTL;
-                        phiTL = phi;
-                        EL = E;
+                            // Search over each crystal
+                            for(int q = 0; q < CalifaCalPerEvent; q++){
 
-                        if (califaR == true && califaL == true){
+                                caldataCalifa[q] = (R3BCalifaCrystalCalData*)calCALIFA->At(q);
+                                int CCcry = caldataCalifa[q]->GetCrystalId();
+                                double Ecry  = caldataCalifa[q]->GetEnergy();
+                                double Nfcry = caldataCalifa[q]->GetNf();
+                                double Nscry = caldataCalifa[q]->GetNs();
 
-                            // ----------------------------------------------------------------------------------------------------
-                            // Kinematical conditions
-                            if (  abs(phiTL) + abs(phiTR) - 3.1415926535 < tolerance_phi) {
-                                if (  abs(thetaTL) + abs(thetaTR) - 1.41372 < tolerance_theta) {
+                                // ----------------------------------------------------------------------------------------------------
+                                if ( (CCcry == CCR && Ecry >= 0.9*ER) || (CCcry == CCL && Ecry >= 0.9*EL)){        // Condition on more than 90% of the energy deposited in the mother crystal of both hits
 
-                                    // Search over the crystal
-                                    for(int q = 0; q < CalifaCalPerEvent; q++){
+                                    h_CALIFATHETA->Fill(thetaTL,thetaTR);
+                                    h_CALIFAPHI->Fill(phiTL,phiTR);
+                                    h_CALIFATHETASUM->Fill(thetasum_plane);
+                                    h_CALIFAECORR->Fill(EL,ER);
+                                    h_CALIFAE->Fill(EL+ER);
 
-                                        caldataCalifa[q] = (R3BCalifaCrystalCalData*)calCALIFA->At(q);
-                                        int CCcry = caldataCalifa[q]->GetCrystalId();
-                                        double Ecry  = caldataCalifa[q]->GetEnergy();
-                                        double Nfcry = caldataCalifa[q]->GetNf();
-                                        double Nscry = caldataCalifa[q]->GetNs();
+                                    // If the target crystal is in the left .........................................................
+                                    if (target_crystal == CCL){
 
-                                        // ----------------------------------------------------------------------------------------------------
-                                        if (CCcry == CC && Ecry >= 0.9*E ){                    // Condition on more than 90% of the energy deposited in the mother crystal
+                                        h_Califa_CC->Fill(CCL);
+                                        h_Califa_Ns->Fill(NsL);
+                                        h_Califa_Nf->Fill(NfL);
+                                        h_Califa_Ns_Nf->Fill(NfL,NsL);
 
-                                            h_CALIFATHETA->Fill(thetaTL,thetaTR);
-                                            h_CALIFAPHI->Fill(phiTL,phiTR);
-                                            h_CALIFATHETASUM->Fill(thetasum_plane);
-                                            h_CALIFAECORR->Fill(EL,ER);
-                                            h_CALIFAE->Fill(EL+ER);
-                                            h_Califa_CC->Fill(CC);
-
-                                            if (CC == target_crystal || target_crystal ==-1){ 
-
-                                                h_Califa_Ns->Fill(Ns);
-                                                h_Califa_Nf->Fill(Nf);
-                                                h_Califa_Ns_Nf->Fill(Nf,Ns);
-
-                                                // Make sure they are not nan
-                                                if (!std::isfinite(Nf) || !std::isfinite(Ns)) {
-                                                    continue;
-                                                }
-
-                                                if ((Nf+Ns)>0 ){
-
-                                                    h_Califa_Components->Fill(Nf+Ns, Nf/(Nf+Ns));
-
-                                                    if ( Ns<1.4*Nf+3500 && Ns>1.4*Nf-13000 && Ns>0){
-                                                        h_Califa_Components_cut->Fill(Nf+Ns, Nf/(Nf+Ns));
-                                                    }
-                                                }
-                                            } 
+                                        if ( (NfL+NsL)>0 ){
+                                            h_Califa_Components->Fill(NfL+NsL, NfL/(NfL+NsL));
                                         }
-                                    }   
-                                }
-                            }
+                                    }
 
-                            califaL = false;
-                            califaR = false;
-                            thetaTL = 0;
-                            thetaTR = 0;
-                        }
-                        continue;
-                    }
+                                    // If the target crystal is the right .........................................................
+                                    else if (target_crystal == CCR){
 
-                    // ----------------------------------------------------------------------------------------------------
-                    if ( (phi>1.5 || phi<-1.5) && califaR == false){ 
-                                                        
-                        califaR = true;
-                        thetaTR = theta;
-                        thetasum_plane += thetaTR;
-                        phiTR = phi;
-                        ER = E;
+                                        h_Califa_CC->Fill(CCR);
+                                        h_Califa_Ns->Fill(NsR);
+                                        h_Califa_Nf->Fill(NfR);
+                                        h_Califa_Ns_Nf->Fill(NfR,NsR);
 
-                        if (califaR == true && califaL == true){
-
-                            // ----------------------------------------------------------------------------------------------------
-                            // Kinematical conditions
-                            if (  abs(phiTL) + abs(phiTR) - 3.1415926535 < tolerance_phi) {
-                                if (  abs(thetaTL) + abs(thetaTR) - 1.41372 < tolerance_theta) {
-
-                                    // Search over the crystal
-                                    for(int q = 0; q < CalifaCalPerEvent; q++){
-
-                                        caldataCalifa[q] = (R3BCalifaCrystalCalData*)calCALIFA->At(q);
-                                        int CCcry = caldataCalifa[q]->GetCrystalId();
-                                        double Ecry  = caldataCalifa[q]->GetEnergy();
-                                        double Nfcry = caldataCalifa[q]->GetNf();
-                                        double Nscry = caldataCalifa[q]->GetNs();
-
-                                        // ----------------------------------------------------------------------------------------------------
-                                        if (CCcry == CC && Ecry >= 0.9*E ){                    // Condition on more than 90% of the energy deposited in the mother crystal
-
-                                            h_CALIFATHETA->Fill(thetaTL,thetaTR);
-                                            h_CALIFAPHI->Fill(phiTL,phiTR);
-                                            h_CALIFATHETASUM->Fill(thetasum_plane);
-                                            h_CALIFAECORR->Fill(EL,ER);
-                                            h_CALIFAE->Fill(EL+ER);
-                                            h_Califa_CC->Fill(CC);
-
-                                            if (CC == target_crystal || target_crystal ==-1){ 
-
-                                                h_Califa_Ns->Fill(Ns);
-                                                h_Califa_Nf->Fill(Nf);
-                                                h_Califa_Ns_Nf->Fill(Nf,Ns);
-
-                                                // Make sure they are not nan
-                                                if (!std::isfinite(Nf) || !std::isfinite(Ns)) {
-                                                    continue;
-                                                }
-
-                                                if ((Nf+Ns)>0 ){
-
-                                                    h_Califa_Components->Fill(Nf+Ns, Nf/(Nf+Ns));
-
-                                                    if ( Ns<1.4*Nf+3500 && Ns>1.4*Nf-13000 && Ns>0){
-                                                        h_Califa_Components_cut->Fill(Nf+Ns, Nf/(Nf+Ns));
-                                                    }
-                                                }
-                                            } 
+                                        if ( (NfR+NsR)>0 ){
+                                            h_Califa_Components->Fill(NfR+NsR, NfR/(NfR+NsR));
                                         }
-                                    } 
-                                }
-                            }
-                            califaL = false;
-                            califaR = false;
-                            thetaTL = 0;
-                            thetaTR = 0;
-                        }
-                        continue;
-                    }
+                                    }
 
-                    // Case  of two hits  in the same branch of califa
-                    if ((califaR == true && califaL == false) || (califaR == false && califaL == true)){
-                        califaL = false;
-                        califaR = false;
-                    }
+                                    // All crystals ...............................................................................
+                                    else if (target_crystal ==-1) {
+
+                                        h_Califa_CC->Fill(CCR);
+                                        h_Califa_Ns->Fill(NsR);
+                                        h_Califa_Nf->Fill(NfR);
+                                        h_Califa_Ns_Nf->Fill(NfR,NsR);
+
+                                        h_Califa_CC->Fill(CCL);
+                                        h_Califa_Ns->Fill(NsL);
+                                        h_Califa_Nf->Fill(NfL);
+                                        h_Califa_Ns_Nf->Fill(NfL,NsL);
+
+                                        if ( (NfR+NsR)>0 ){
+                                            h_Califa_Components->Fill(NfR+NsR, NfR/(NfR+NsR));
+                                        }
+
+                                        if ( (NfL+NsL)>0 ){
+                                            h_Califa_Components->Fill(NfL+NsL, NfL/(NfL+NsL));
+                                        }
+                                    }
+                                }
+                            }   
+                        }
+                    }               
                 }
             }
         }
@@ -323,54 +326,31 @@ void CalifaPID(){
     /////////////////////////////////////////////////////////////////////////////////////////
 
     // Fitting of the Nf component
-
-    double xMin = 25000;
-    double xMax = 600000;
+    double xMin = 30000;
+    double xMax = 200000;
     double yMin = 0.4;
-    double yMax = 0.60;
+    double yMax = 0.7;
 
     TGraph* gr = new TGraph();
-    int ip = 0;
 
-    for (int ix = 1; ix <= h_Califa_Components_cut->GetNbinsX(); ++ix) {
+    // Vector to store the peak coordinates
+    std::vector<double> peakX, peakY;
+    SlicePeaks(h_Califa_Components, peakX, peakY, 50, xMin, xMax);
 
-        double x = h_Califa_Components_cut->GetXaxis()->GetBinCenter(ix);
+    cout << "Peaks array length: " <<  peakX.size() << endl << endl; 
 
-        if (x < xMin || x > xMax) continue;
-
-        double sumY = 0.0;
-        double sumW = 0.0;
-
-        for (int iy = 1; iy <= h_Califa_Components_cut->GetNbinsY(); ++iy) {
-
-            double y = h_Califa_Components_cut->GetYaxis()->GetBinCenter(iy);
-
-            if (y < yMin || y > yMax) continue;
-
-            double w = h_Califa_Components_cut->GetBinContent(ix, iy);
-
-            if (w <= 0) continue;
-
-            // Takes a summation over the Y components inside the range wheigted by the multiplicities
-            sumY += y * w*w;
-            sumW += w*w;
-        }
-
-        if (sumW > 0) {
-            gr->SetPoint(ip++, x, sumY / sumW);
-        }
+    // Set the values in the X-Y plane
+    for (size_t i = 0; i < peakX.size(); ++i) {
+        if (peakY[i] < yMin || peakY[i] > yMax) continue;   
+        gr->SetPoint(gr->GetN(), peakX[i], peakY[i]);
     }
 
+    // Function to fit the peaks
     TF1 *f = new TF1("f",
                  "[0] + [1]/sqrt(x+[2]) + [3]/(x + [4]) + [5]/((x + [6])*(x + [6]))",
-                 0, 900000);
-
-    f->SetParLimits(1, 0.0, 1e12);
-    f->SetParLimits(3, 0.0, 1e12);
-    f->SetParLimits(5, 0.0, 1e12);
+                 xMin, xMax);
 
     gr->Fit(f, "R");
-
     TCanvas* c_gr  = new TCanvas();
     gr->Draw();
 
@@ -410,19 +390,20 @@ void CalifaPID(){
     // ===========================================================================================
     TCanvas* c_Califa_Components = new TCanvas();
     c_Califa_Components->cd(1);
-    // c_Califa_Components->SetLogz();
     h_Califa_Components->Draw("colz");
 
-    f->SetLineWidth(1);
-    f->Draw("same");
+    double drawMin = 1000;
+    double drawMax = 700000;
 
-    TCanvas* c_Califa_Components_cut = new TCanvas();
-    c_Califa_Components_cut->cd(1);
-    // c_Califa_Components->SetLogz();
-    h_Califa_Components_cut->Draw("colz");
-
-    f->SetLineWidth(1);
-    f->Draw("same");
+    TGraph* g_fit = new TGraph();
+    for (int i = 0; i <= 1000; ++i) {
+        double x = drawMin + (drawMax - drawMin) * i / 1000.;
+        double y = f->Eval(x);
+        if (std::isfinite(y)) g_fit->SetPoint(g_fit->GetN(), x, y);
+    }
+    g_fit->SetLineColor(kRed);
+    g_fit->SetLineWidth(1);
+    g_fit->Draw("L same");
 
     TCanvas* c_CALIFAE = new TCanvas();
     c_CALIFAE->cd(1);
@@ -445,24 +426,18 @@ void CalifaPID(){
     c_CALIFAPHI->cd(1);
     h_CALIFAPHI->Draw("colz");
 
-    // TF1* hyperbola = new TF1("hyperbola", "1600.0/x + 0.47", 1000, 900000);
-    // hyperbola->SetLineColor(kRed);
-    // hyperbola->SetLineWidth(2);
-    // hyperbola->Draw("same");
-
-    // TF1* trendCurve = new TF1("trendCurve", "0.37 + 0.485/pow(x/1000.0 + 5.0, 0.38)", 0, 700000);
-    // trendCurve->SetLineColor(kRed);
-    // trendCurve->SetLineWidth(2);
-    // trendCurve->Draw("same");
-
-    gSystem->mkdir("pdf", kTRUE);
-    TCanvas* canvases[] = {c_gr, c_Califa_hits, c_Califa_Ns, c_Califa_Nf, c_Califa_Ns_Nf, c_Califa_CC,
-                           c_Califa_Components, c_Califa_Components_cut, c_CALIFAE, c_CALIFAECORR,
-                           c_CALIFATHETASUM, c_CALIFATHETA, c_CALIFAPHI};
-    const char* names[] = {"gr", "Califa_hits", "Califa_Ns", "Califa_Nf", "Califa_Ns_Nf", "Califa_CC",
-                           "Califa_Components", "Califa_Components_cut", "CALIFAE", "CALIFAECORR",
-                           "CALIFATHETASUM", "CALIFATHETA", "CALIFAPHI"};
-    for (int i = 0; i < 13; i++) {
-        canvases[i]->SaveAs(Form("pdf/%s.pdf", names[i]));
-    }
+    TFile* fout = TFile::Open("CalifaPID.root", "RECREATE");
+    h_Califa_Components->Write();
+    h_Califa_hits->Write();
+    h_Califa_Ns->Write();
+    h_Califa_Nf->Write();
+    h_Califa_Ns_Nf->Write();
+    h_Califa_CC->Write();
+    h_CALIFAE->Write();
+    h_CALIFATHETA->Write();
+    h_CALIFAPHI->Write();
+    h_CALIFAECORR->Write();
+    h_CALIFATHETASUM->Write();
+    gr->Write("gr");
+    fout->Close();
 }
