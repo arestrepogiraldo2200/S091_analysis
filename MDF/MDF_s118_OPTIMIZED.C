@@ -8,7 +8,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Definitions of strings and histograms
-char fname1[200], fname2[200], fname3[200], fname4[200], fname5[200], fname6[200], fname7[200], fname8[200], fname9[200], fname10[200], fname11[200], fname12[200], fname13[200], fname14[200], fname15[200], fname16[200], fname17[200], fname18[200], fname19[200], fname20[200], fname21[200], fname22[200];
+char fname1[200], fname2[200], fname3[200], fname4[200], fname5[200], fname6[200], fname7[200], fname8[200], fname9[200], fname10[200], fname11[200], fname12[200], fname13[200], fname14[200], fname15[200], fname16[200], fname17[200], fname18[200], fname19[200], fname20[200], fname21[200], fname22[200], fname23[200], fname24[200], fname25[200], fname26[200], fname27[200];
 
 int tpat;
 // MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF-MDF
@@ -21,7 +21,7 @@ TString MDF_PoQ_file = "./MDF_params.txt";
 TString MDF_PoQ_file_path = "./MDF_params_path.txt";
 // TString MDF_PoQ_file = "./MDF_PoQ_1456A_20240221.txt";
 
-const TString isotopeTag = "14C_opt";
+const TString isotopeTag = "14C_test";
 const TString incommingC = "14C";
 const TString outputRootDir = Form("%s_mdf", isotopeTag.Data());
 const TString outputPngDir = Form("%s_mdf", isotopeTag.Data());
@@ -519,10 +519,12 @@ void MDF_s118_OPTIMIZED(){
     // Load the root file 
 
     TChain* chain = new TChain("evt"); 
+
     //sprintf(fname1,"./merged_MDF_runs.root"); 
     // sprintf(fname1,"./merged_MDF_runs_v3.root");
     // sprintf(fname1,"./main0280_0001_unpacked_NEW_TOFD.root");
 
+    // MDF runs
     // sprintf(fname1,"./main0326_0001_unpacked_MDF_v3.root");        // 10C
     // sprintf(fname1,"./main0321_0001_unpacked_MDF_v3.root");        // 11C
     // sprintf(fname1,"./main0327_0001_unpacked_MDF_v3.root");        // 12C
@@ -535,6 +537,7 @@ void MDF_s118_OPTIMIZED(){
     // sprintf(fname1,"./main0252_0001_unpacked_MDF_2.root");
     // sprintf(fname1,"./main0280_0001_unpacked_los.root");
 
+    // 12C secondary
     // sprintf(fname1,"./main0274_0001_unpacked_los.root");
     // sprintf(fname2,"./main0275_0001_unpacked_los.root");
     // sprintf(fname3,"./main0276_0001_unpacked_los.root");
@@ -549,6 +552,7 @@ void MDF_s118_OPTIMIZED(){
     // sprintf(fname12,"./main0285_0001_unpacked_los.root");
     // sprintf(fname13,"./main0286_0001_unpacked_los.root");
 
+    // 12C primary beam
     // sprintf(fname1,"./main0173_0001_unpacked_los.root");
     // sprintf(fname2,"./main0174_0001_unpacked_los.root");
     // sprintf(fname3,"./main0175_0001_unpacked_los.root");
@@ -572,7 +576,83 @@ void MDF_s118_OPTIMIZED(){
     // sprintf(fname21,"./main0193_0001_unpacked_los.root");
     // sprintf(fname22,"./main0194_0001_unpacked_los.root");
 
-    sprintf(fname1,"./main0260_0001_unpacked_los.root");
+    // 10C beam
+    // sprintf(fname1,"./main0197_0001_unpacked_los.root");
+    // sprintf(fname2,"./main0198_0001_unpacked_los.root");
+    // sprintf(fname3,"./main0199_0001_unpacked_los.root");
+    // sprintf(fname4,"./main0200_0001_unpacked_los.root");
+    // sprintf(fname5,"./main0201_0001_unpacked_los.root");
+    // sprintf(fname6,"./main0202_0001_unpacked_los.root");
+    // sprintf(fname7,"./main0203_0001_unpacked_los.root");
+    // sprintf(fname8,"./main0204_0001_unpacked_los.root");
+    // sprintf(fname9,"./main0205_0001_unpacked_los.root");
+    // sprintf(fname10,"./main0206_0001_unpacked_los.root");
+    // sprintf(fname11,"./main0207_0001_unpacked_los.root");
+    // sprintf(fname12,"./main0208_0001_unpacked_los.root");
+    // sprintf(fname13,"./main0209_0001_unpacked_los.root");
+    // sprintf(fname14,"./main0210_0001_unpacked_los.root");
+    // sprintf(fname15,"./main0211_0001_unpacked_los.root");
+    // sprintf(fname16,"./main0212_0001_unpacked_los.root");
+    // sprintf(fname17,"./main0213_0001_unpacked_los.root");
+    // sprintf(fname18,"./main0214_0001_unpacked_los.root");
+    // sprintf(fname19,"./main0215_0001_unpacked_los.root");
+    // sprintf(fname20,"./main0216_0001_unpacked_los.root");
+    // sprintf(fname21,"./main0217_0001_unpacked_los.root");
+    // sprintf(fname22,"./main0218_0001_unpacked_los.root");
+    // sprintf(fname23,"./main0219_0001_unpacked_los.root");
+    // sprintf(fname24,"./main0220_0001_unpacked_los.root");
+    // sprintf(fname25,"./main0221_0001_unpacked_los.root");
+    // sprintf(fname26,"./main0222_0001_unpacked_los.root");
+    // sprintf(fname27,"./main0223_0001_unpacked_los.root");
+
+    // 14C beam
+    // sprintf(fname1,"./main0253_0001_unpacked_los.root");
+    // sprintf(fname2,"./main0254_0001_unpacked_los.root");
+    // sprintf(fname3,"./main0255_0001_unpacked_los.root");
+    // sprintf(fname4,"./main0256_0001_unpacked_los.root");
+    // sprintf(fname5,"./main0257_0001_unpacked_los.root");
+    // sprintf(fname6,"./main0258_0001_unpacked_los.root");
+    // sprintf(fname7,"./main0259_0001_unpacked_los.root");
+    // sprintf(fname8,"./main0260_0001_unpacked_los.root");
+    // sprintf(fname9,"./main0261_0001_unpacked_los.root");
+    // sprintf(fname10,"./main0262_0001_unpacked_los.root");
+    // sprintf(fname11,"./main0263_0001_unpacked_los.root");
+    // sprintf(fname12,"./main0264_0001_unpacked_los.root");
+    // sprintf(fname13,"./main0265_0001_unpacked_los.root");
+    // sprintf(fname14,"./main0266_0001_unpacked_los.root");
+    // sprintf(fname15,"./main0267_0001_unpacked_los.root");
+    // sprintf(fname16,"./main0268_0001_unpacked_los.root");
+    // sprintf(fname17,"./main0269_0001_unpacked_los.root");
+    // sprintf(fname18,"./main0270_0001_unpacked_los.root");
+    // sprintf(fname19,"./main0271_0001_unpacked_los.root");
+
+    // 16C beam
+    // sprintf(fname1,"./main0231_0001_unpacked_los.root");
+    // sprintf(fname2,"./main0232_0001_unpacked_los.root");
+    // sprintf(fname3,"./main0233_0001_unpacked_los.root");
+    // sprintf(fname4,"./main0234_0001_unpacked_los.root");
+    // sprintf(fname5,"./main0235_0001_unpacked_los.root");
+    // sprintf(fname6,"./main0236_0001_unpacked_los.root");
+    // sprintf(fname7,"./main0237_0001_unpacked_los.root");
+    // sprintf(fname8,"./main0238_0001_unpacked_los.root");
+    // sprintf(fname9,"./main0239_0001_unpacked_los.root");
+    // sprintf(fname10,"./main0240_0001_unpacked_los.root");
+    // sprintf(fname11,"./main0241_0001_unpacked_los.root");
+    // sprintf(fname12,"./main0242_0001_unpacked_los.root");
+    // sprintf(fname13,"./main0243_0001_unpacked_los.root");
+    // sprintf(fname14,"./main0244_0001_unpacked_los.root");
+    // sprintf(fname15,"./main0245_0001_unpacked_los.root");
+    // sprintf(fname16,"./main0246_0001_unpacked_los.root");
+    // sprintf(fname17,"./main0247_0001_unpacked_los.root");
+    // sprintf(fname18,"./main0248_0001_unpacked_los.root");
+    // sprintf(fname19,"./main0249_0001_unpacked_los.root");
+    // sprintf(fname20,"./main0250_0001_unpacked_los.root");
+    // sprintf(fname21,"./main0251_0001_unpacked_los.root");
+    // sprintf(fname22,"./main0252_0001_unpacked_los.root");
+
+    // sprintf(fname1,"./main0202_0001_unpacked_los.root"); //10C
+    sprintf(fname1,"./main0260_0001_unpacked_los.root"); //14C
+    // sprintf(fname1,"./main0240_0001_unpacked_los.root"); //16C
 
     // Cut in FRS incomming beam
     FRS_CUT = true;
@@ -600,8 +680,13 @@ void MDF_s118_OPTIMIZED(){
     // chain->Add(fname20); 
     // chain->Add(fname21); 
     // chain->Add(fname22); 
+    // chain->Add(fname23); 
+    // chain->Add(fname24); 
+    // chain->Add(fname25); 
+    // chain->Add(fname26); 
+    // chain->Add(fname27); 
 
-    double MWPC_avrg, MWPC_avrg1, MWPC_avrg2, MWPC_avrg3, MWPC_avrg4, MWPC_avrg5, MWPC_avrg6, MWPC_avrg7, MWPC_avrg8, MWPC_avrg9, MWPC_avrg10, MWPC_avrg11, MWPC_avrg12, MWPC_avrg13, MWPC_avrg14, MWPC_avrg15, MWPC_avrg16, MWPC_avrg17, MWPC_avrg18, MWPC_avrg19, MWPC_avrg20, MWPC_avrg21, MWPC_avrg22;
+    double MWPC_avrg, MWPC_avrg1, MWPC_avrg2, MWPC_avrg3, MWPC_avrg4, MWPC_avrg5, MWPC_avrg6, MWPC_avrg7, MWPC_avrg8, MWPC_avrg9, MWPC_avrg10, MWPC_avrg11, MWPC_avrg12, MWPC_avrg13, MWPC_avrg14, MWPC_avrg15, MWPC_avrg16, MWPC_avrg17, MWPC_avrg18, MWPC_avrg19, MWPC_avrg20, MWPC_avrg21, MWPC_avrg22, MWPC_avrg23, MWPC_avrg24, MWPC_avrg25, MWPC_avrg26, MWPC_avrg27;
     
     MWPC_avrg1 = averageMWPC1(fname1);
     // MWPC_avrg2 = averageMWPC1(fname2);
@@ -625,10 +710,17 @@ void MDF_s118_OPTIMIZED(){
     // MWPC_avrg20 = averageMWPC1(fname20);
     // MWPC_avrg21 = averageMWPC1(fname21);
     // MWPC_avrg22 = averageMWPC1(fname22);
+    // MWPC_avrg23 = averageMWPC1(fname23);
+    // MWPC_avrg24 = averageMWPC1(fname24);
+    // MWPC_avrg25 = averageMWPC1(fname25);
+    // MWPC_avrg26 = averageMWPC1(fname26);
+    // MWPC_avrg27 = averageMWPC1(fname27);
 
     // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5 + MWPC_avrg6 + MWPC_avrg7 + MWPC_avrg8 + MWPC_avrg9 + MWPC_avrg10 + MWPC_avrg11 + MWPC_avrg12 + MWPC_avrg13)/13;
     // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5 + MWPC_avrg6 + MWPC_avrg7 + MWPC_avrg8 + MWPC_avrg9 + MWPC_avrg10 + MWPC_avrg11 + MWPC_avrg12 + MWPC_avrg13 + MWPC_avrg14 + MWPC_avrg15 +  MWPC_avrg16 + MWPC_avrg17 + MWPC_avrg18 + MWPC_avrg19 + MWPC_avrg20 + MWPC_avrg21 + MWPC_avrg22)/22;
     // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5 + MWPC_avrg6 + MWPC_avrg7 + MWPC_avrg8 + MWPC_avrg9 + MWPC_avrg10 + MWPC_avrg11)/11;
+    // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5 + MWPC_avrg6 + MWPC_avrg7 + MWPC_avrg8 + MWPC_avrg9 + MWPC_avrg10 + MWPC_avrg11 + MWPC_avrg12 + MWPC_avrg13 + MWPC_avrg14 + MWPC_avrg15 +  MWPC_avrg16 + MWPC_avrg17 + MWPC_avrg18 + MWPC_avrg19)/19;
+    // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5 + MWPC_avrg6 + MWPC_avrg7 + MWPC_avrg8 + MWPC_avrg9 + MWPC_avrg10 + MWPC_avrg11 + MWPC_avrg12 + MWPC_avrg13 + MWPC_avrg14 + MWPC_avrg15 +  MWPC_avrg16 + MWPC_avrg17 + MWPC_avrg18 + MWPC_avrg19 + MWPC_avrg20 + MWPC_avrg21 + MWPC_avrg22 + MWPC_avrg23 + MWPC_avrg24 + MWPC_avrg25 + MWPC_avrg26 + MWPC_avrg27)/27;
     // MWPC_avrg = (MWPC_avrg1 + MWPC_avrg2 + MWPC_avrg3 + MWPC_avrg4 + MWPC_avrg5)/5;
     MWPC_avrg = MWPC_avrg1;
 
@@ -825,10 +917,10 @@ void MDF_s118_OPTIMIZED(){
                     double Z_semimajor; 
 
                     if (incommingC== "10C") {
-                        Z0   = 5.9343; 
-                        AoZ0 = 2.00072; 
-                        AoZ_semimajor = 3*0.00125541;
-                        Z_semimajor = 3*0.107835;
+                        Z0   = 5.99124; 
+                        AoZ0 = 1.6704; 
+                        AoZ_semimajor = 3*0.00333818;
+                        Z_semimajor = 3*0.115022;
                     }
                     else if (incommingC== "12C") { 
                         Z0   = 5.9343; 
@@ -843,10 +935,10 @@ void MDF_s118_OPTIMIZED(){
                         Z_semimajor = 3*0.108631; 
                     }
                     else if (incommingC== "16C") { 
-                        Z0   = 5.9343; 
-                        AoZ0 = 2.00072; 
-                        AoZ_semimajor = 3*0.00125541;
-                        Z_semimajor = 3*0.107835; 
+                        Z0   = 5.94488; 
+                        AoZ0 = 2.66887; 
+                        AoZ_semimajor = 3*0.00166178;
+                        Z_semimajor = 3*0.110169; 
                     }
 
                     Z0_plot = Z0; 
@@ -925,7 +1017,7 @@ void MDF_s118_OPTIMIZED(){
             averageEloss = totalEloss / TofdHitPerEvent;
 
             // Evaluates the charge difference between all four hits 
-            if (maxCharge - minCharge > 0.7){
+            if (maxCharge - minCharge > 0.5){
                 b_tofdq = false;                              
             } else {
 
@@ -1196,7 +1288,7 @@ void MDF_s118_OPTIMIZED(){
         Gaussian2DFitResult fit;
 
         if (incommingC== "10C") {
-            fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 1.99, 2.01, 5.5, 6.5);                
+            fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 1.66, 1.68, 5.5, 6.5);                
         }
         else if (incommingC== "12C") { 
             fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 1.99, 2.01, 5.5, 6.5);
@@ -1205,7 +1297,7 @@ void MDF_s118_OPTIMIZED(){
             fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 2.334, 2.346, 5.5, 6.5);
         }
         else if (incommingC== "16C") { 
-            fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 1.99, 2.01, 5.5, 6.5);
+            fit = FitGaussian2DInRegion(h_AoZvsZ_FRS, 2.65, 2.67, 5.5, 6.5);
         }
 
         if (fit.ok) {
